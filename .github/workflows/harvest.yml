@@ -1,0 +1,32 @@
+name: harvest
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: harvest
+  cancel-in-progress: false
+jobs:
+  harvest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: keeper
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm harvest
+        env:
+          NEAR_NETWORK: ${{ vars.NEAR_NETWORK }}
+          LAUNCHPAD_ID: ${{ vars.LAUNCHPAD_ID }}
+          KEEPER_ACCOUNT: ${{ secrets.KEEPER_ACCOUNT }}
+          KEEPER_KEY: ${{ secrets.KEEPER_KEY }}

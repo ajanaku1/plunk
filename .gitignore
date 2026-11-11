@@ -1,0 +1,26 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Build artifacts
+target/
+node_modules/
+.next/
+dist/
+build/
+*.tsbuildinfo
+next-env.d.ts
+*.log
+
+# Local
+.DS_Store
+.vercel
+.claude/
+.specify/
+design.md
+Goal.md
+prompt.md
+plan.md
+IMPLEMENTATION.md
+video/

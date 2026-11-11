@@ -1,0 +1,356 @@
+<title>Plunk Box</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+  /* Layout: launchpad token-page anatomy. Top bar; full-width phase banner; two columns: main (identity, chart, tabs) + sticky 360px bid panel. */
+  :root {
+    --green: #2ee89c; --green-2: #1bb97a; --purple: #9b6bff; --black: #0e0b14; --paper: #f3f0fa;
+    --bg: #0e0b14; --surface: #15111e; --surface-2: #1c1826; --line: #27222f; --line-2: #332d3d; --fg: #f3f0fa; --muted: #8f89a3; --faint: #5e586f;
+    --accent: var(--green); --accent-fg: #0e0b14; --up: #2ee89c; --down: #ff5c7a; --warn: #ffc24d;
+    --body: "Archivo", "Helvetica Neue", Arial, sans-serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --r: 12px; --ease: cubic-bezier(.2,.8,.2,1); color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg: #f3f0fa; --surface: #fff; --surface-2: #ece7f7; --line: #ddd7ea; --line-2: #cfc8e0; --fg: #0e0b14; --muted: #6e6884; --faint: #a39cb8; --accent: var(--green-2); --up: #1bb97a; color-scheme: light; } }
+  :root[data-theme="light"] { --bg: #f3f0fa; --surface: #fff; --surface-2: #ece7f7; --line: #ddd7ea; --line-2: #cfc8e0; --fg: #0e0b14; --muted: #6e6884; --faint: #a39cb8; --accent: var(--green-2); --up: #1bb97a; color-scheme: light; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.45 var(--body); -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; }
+  .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+  /* top bar */
+  .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 21; background: var(--bg); }
+  .top .in { max-width: 1280px; margin: 0 auto; height: 56px; display: flex; align-items: center; gap: 20px; }
+  .logo { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 18px; letter-spacing: -.02em; }
+  .logo svg { width: 28px; height: 28px; }
+  nav.main { display: flex; gap: 4px; }
+  nav.main a { padding: 7px 10px; border-radius: 8px; color: var(--muted); font-weight: 500; }
+  nav.main a[aria-current] { color: var(--fg); background: var(--surface-2); }
+  .search { flex: 1; max-width: 420px; margin-left: auto; display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; height: 36px; color: var(--muted); }
+  .search input { flex: 1; min-width: 0; background: transparent; border: 0; color: var(--fg); font: inherit; }
+  .search input:focus { outline: none; }
+  .search kbd { font: 11px var(--mono); border: 1px solid var(--line-2); border-radius: 4px; padding: 1px 5px; }
+  .connect { height: 36px; padding: 0 14px; border-radius: 10px; border: 0; background: var(--accent); color: var(--accent-fg); font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .connect.on { background: var(--surface-2); color: var(--fg); border: 1px solid var(--line-2); font-family: var(--mono); font-weight: 500; }
+  @media (max-width: 820px) { nav.main, .search { display: none; } .top .in { gap: 12px; } .logo { margin-right: auto; } }
+
+  /* banner */
+  .banner { border-bottom: 1px solid var(--line); background: var(--surface); }
+  .banner .in { max-width: 1280px; margin: 0 auto; min-height: 52px; display: flex; align-items: center; gap: 14px; padding-block: 8px; flex-wrap: wrap; }
+  .banner .mascot { width: 34px; height: 34px; flex: none; }
+  .banner .msg { flex: 1; min-width: 220px; }
+  .banner .msg b { font-weight: 600; }
+  .banner .msg span { color: var(--muted); }
+  .banner .count { font: 600 22px var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .banner .count small { font: 11px var(--mono); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-left: 8px; }
+  .banner .stepper { display: flex; gap: 6px; align-items: center; font: 12px var(--mono); color: var(--muted); }
+  .banner .stepper i { width: 28px; height: 4px; border-radius: 2px; background: var(--line-2); }
+  .banner .stepper i.done { background: var(--purple); }
+  :root[data-box="failed"] .banner { background: color-mix(in srgb, var(--down) 10%, var(--surface)); }
+  :root[data-box="open"] .banner { background: color-mix(in srgb, var(--green) 8%, var(--surface)); }
+
+  /* page grid */
+  .page { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; padding-block: 20px 96px; }
+  @media (max-width: 980px) { .page { grid-template-columns: 1fr; } .side { position: static !important; } }
+  .main { min-width: 0; display: grid; gap: 16px; align-content: start; }
+  .side { position: sticky; top: 72px; align-self: start; display: grid; gap: 16px; min-width: 0; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+  .card.pad { padding: 16px; }
+
+  /* identity */
+  .ident { display: grid; grid-template-columns: 56px minmax(0,1fr) auto; gap: 14px; align-items: center; }
+  @media (max-width: 560px) { .ident { grid-template-columns: 56px minmax(0,1fr); } .ident .big { grid-column: 1 / -1; text-align: left; } }
+  .avatar { width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, var(--green), var(--purple)); display: grid; place-items: center; font: 700 18px var(--mono); color: var(--black); }
+  .ident h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -.01em; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ident h1 .tk { color: var(--muted); font-weight: 500; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font: 12px var(--mono); color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; cursor: pointer; }
+  .chip:hover { color: var(--fg); }
+  .chip.status { color: var(--fg); border-color: var(--line-2); }
+  .chip.status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--dot, var(--muted)); }
+  :root[data-box="bidding"] .chip.status, :root[data-box="open"] .chip.status { --dot: var(--green); }
+  :root[data-box="reveal"] .chip.status, :root[data-box="opening"] .chip.status { --dot: var(--purple); }
+  :root[data-box="failed"] .chip.status { --dot: var(--down); }
+  .big { text-align: right; }
+  .big .n { font: 600 26px var(--mono); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .big .d { font: 12px var(--mono); color: var(--muted); }
+  .big .d.up { color: var(--up); } .big .d.down { color: var(--down); }
+  .pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .pill { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; background: var(--surface-2); border-radius: 8px; min-width: 110px; flex: 1; }
+  .pill small { font: 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .pill b { font: 500 14px var(--mono); font-variant-numeric: tabular-nums; }
+
+  /* chart */
+  .chart-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .seg { display: inline-flex; background: var(--surface-2); border-radius: 8px; padding: 3px; gap: 2px; }
+  .seg button { border: 0; background: transparent; padding: 6px 12px; border-radius: 6px; color: var(--muted); font-weight: 500; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 0 var(--line); }
+  .seg button:disabled { opacity: .45; cursor: not-allowed; }
+  .ranges { display: flex; gap: 2px; }
+  .ranges button { border: 0; background: transparent; padding: 4px 8px; border-radius: 6px; color: var(--muted); font: 12px var(--mono); cursor: pointer; }
+  .ranges button[aria-pressed="true"] { color: var(--fg); background: var(--surface-2); }
+  #chart { height: 320px; width: 100%; }
+  .chart-note { padding: 8px 12px; border-top: 1px solid var(--line); font: 12px var(--mono); color: var(--muted); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+
+  /* tabs */
+  .tabs { display: flex; gap: 2px; padding: 6px 8px 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .tabs button { border: 0; background: transparent; padding: 10px 12px; color: var(--muted); font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+  .tabs button[aria-selected="true"] { color: var(--fg); border-color: var(--accent); }
+  .tabs button:disabled { opacity: .4; cursor: not-allowed; }
+  .tabpanel { padding: 4px 0 8px; }
+  table { width: 100%; border-collapse: collapse; font: 13px var(--mono); font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 9px 16px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  td.r, th.r { text-align: right; }
+  tr:last-child td { border-bottom: 0; }
+  .tag { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 4px; background: var(--surface-2); color: var(--muted); }
+  .tag.sealed { color: var(--purple); background: color-mix(in srgb, var(--purple) 14%, transparent); }
+  .tag.market { color: var(--green); background: color-mix(in srgb, var(--green) 12%, transparent); }
+  .tag.x { color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, transparent); }
+  .tbl-wrap { overflow-x: auto; }
+  .kv { display: grid; }
+  .kv > div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+  .kv > div:last-child { border-bottom: 0; }
+  .kv small { color: var(--muted); }
+  .kv b { font: 500 13px var(--mono); }
+  .hbar { height: 3px; background: var(--line-2); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+  .hbar i { display: block; height: 100%; width: calc(var(--v) * 100%); background: var(--purple); }
+  .empty { padding: 28px 16px; text-align: center; color: var(--muted); }
+
+  /* bid panel */
+  .prog { display: grid; gap: 6px; }
+  .prog .row { display: flex; justify-content: space-between; font: 12px var(--mono); color: var(--muted); }
+  .prog .row b { color: var(--fg); font-weight: 500; }
+  .bar { height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; position: relative; }
+  .bar i { position: absolute; inset: 0 auto 0 0; width: calc(var(--v, 0) * 100%); background: var(--accent); border-radius: 4px; transition: width .6s var(--ease); }
+  .bar .min { position: absolute; top: -3px; bottom: -3px; left: calc(var(--m, 0) * 100%); width: 2px; background: var(--fg); opacity: .6; }
+  .seg.full { display: grid; grid-template-columns: 1fr 1fr; margin-top: 14px; }
+  .seg.full button { padding: 9px; font-weight: 600; }
+  .seg.full button.sell[aria-pressed="true"] { color: var(--down); }
+  .field { margin-top: 12px; display: grid; gap: 6px; }
+  .field label { display: flex; justify-content: space-between; font: 12px var(--mono); color: var(--muted); }
+  .field label b { color: var(--fg); font-weight: 500; cursor: pointer; }
+  .input { display: flex; align-items: center; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; transition: border-color .15s; }
+  .input:focus-within { border-color: var(--accent); }
+  .input input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--fg); font: 600 22px var(--mono); padding: 12px 0; }
+  .input input:focus { outline: none; }
+  .input span { font: 12px var(--mono); color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .input span i { width: 16px; height: 16px; border-radius: 50%; background: var(--fg); display: inline-block; }
+  .quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+  .quick button { border: 1px solid var(--line); background: transparent; border-radius: 8px; padding: 6px; font: 12px var(--mono); color: var(--muted); cursor: pointer; }
+  .quick button:hover { color: var(--fg); border-color: var(--line-2); }
+  .est { margin-top: 12px; display: grid; gap: 6px; font: 12px var(--mono); color: var(--muted); }
+  .est div { display: flex; justify-content: space-between; gap: 8px; }
+  .est b { color: var(--fg); font-weight: 500; }
+  .cta { margin-top: 14px; width: 100%; height: 46px; border: 0; border-radius: 10px; background: var(--accent); color: var(--accent-fg); font-weight: 700; font-size: 15px; cursor: pointer; transition: filter .15s; }
+  .cta:hover { filter: brightness(1.06); }
+  .cta.ghost { background: var(--surface-2); color: var(--fg); border: 1px solid var(--line-2); }
+  .cta.sell { background: var(--down); color: #fff; }
+  .cta:disabled { opacity: .5; cursor: not-allowed; }
+  .fine { margin-top: 10px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .fine a { color: var(--purple); }
+  .xchain { margin-top: 10px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .xchain .sol { width: 14px; height: 14px; border-radius: 4px; background: linear-gradient(135deg, var(--purple), var(--green)); }
+  .h3 { margin: 0 0 10px; font: 600 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; }
+  .meter { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+  .meter i { display: block; height: 100%; width: calc(var(--v) * 100%); background: linear-gradient(90deg, var(--purple), var(--green)); transition: width .6s var(--ease); }
+  .rules { display: grid; gap: 10px; font-size: 13px; color: var(--muted); }
+  .rules div { display: flex; gap: 10px; }
+  .rules span { font: 600 11px var(--mono); color: var(--purple); min-width: 18px; margin-top: 2px; }
+  .toast { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 12px 16px; border-radius: 10px; z-index: 40; max-width: calc(100% - 32px); font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+
+  /* prototype-only state bar */
+  .devbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--surface); border-top: 1px solid var(--line); display: flex; gap: 6px; padding: 10px max(16px, env(safe-area-inset-left, 0px)); overflow-x: auto; align-items: center; }
+  .devbar span { color: var(--muted); font: 11px var(--mono); letter-spacing: .1em; white-space: nowrap; }
+  .devbar button { font: 12px var(--mono); padding: 6px 12px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: var(--fg); cursor: pointer; white-space: nowrap; }
+  .devbar button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+
+  /* mascot */
+  .mascot { overflow: visible; }
+  .m-lid, .m-eyes, .m-eye { transition: transform .6s var(--ease), opacity .3s; }
+  .m-eye { transform-box: fill-box; transform-origin: center; }
+  .mascot[data-state="bidding"] .m-eye { animation: m-blink 4s infinite; }
+  .mascot[data-state="reveal"] .m-eyes { animation: m-dart 1.4s ease-in-out infinite; }
+  .mascot[data-state="opening"] .m-lid { animation: m-lift 1.6s ease-in-out infinite; }
+  .mascot[data-state="open"] .m-lid { transform: translateY(-8px) scaleX(1.08); }
+  .mascot[data-state="open"] .m-eye { transform: scale(1.4); }
+  .mascot[data-state="failed"] .m-lid { transform: translateY(9px); }
+  .mascot[data-state="failed"] .m-eyes { opacity: 0; }
+  @keyframes m-blink { 0%,92%,100% { transform: scaleY(1) } 95% { transform: scaleY(.1) } }
+  @keyframes m-dart { 0%,100% { transform: translateX(-4px) } 50% { transform: translateX(4px) } }
+  @keyframes m-lift { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+  @media (prefers-reduced-motion: reduce) { .mascot * { animation: none !important; transition: none !important; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <g id="peek"><rect x="10" y="28" width="44" height="28" rx="5" fill="var(--green)"/><rect x="13" y="20" width="38" height="11" fill="var(--black)"/><g class="m-eyes"><circle class="m-eye" cx="25" cy="25" r="3" fill="var(--purple)"/><circle class="m-eye" cx="39" cy="25" r="3" fill="var(--purple)"/></g><rect class="m-lid" x="6" y="9" width="52" height="10" rx="3" fill="var(--green)"/></g>
+</defs></svg>
+
+<header class="top gutter"><div class="in">
+  <a class="logo" href="#"><svg viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="var(--paper)"/><g transform="translate(0 2)"><use href="#peek"/></g></svg>plunk</a>
+  <nav class="main"><a href="#" aria-current="page">Boxes</a><a href="#">Make a box</a><a href="#">Docs</a></nav>
+  <div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input placeholder="Search boxes, tickers, accounts" aria-label="Search"><kbd>/</kbd></div>
+  <button class="connect" id="connect">Connect wallet</button>
+</div></header>
+
+<div class="banner gutter"><div class="in">
+  <svg class="mascot" data-m viewBox="0 0 64 64"><use href="#peek"/></svg>
+  <div class="msg">
+    <div data-show="bidding"><b>Bidding is open.</b> <span>Everyone who gets in pays the same clearing price. No price is visible to anyone until the box shuts.</span></div>
+    <div data-show="reveal"><b>Box shut.</b> <span>Sealed bids are unlocking automatically. Nothing to do on your side.</span></div>
+    <div data-show="opening"><b>Opening.</b> <span data-bind="stepName"></span> <span>· step <span data-bind="stepN"></span> of 4. The page keeps it moving.</span></div>
+    <div data-show="open"><b>Open.</b> <span>Cleared at one price. Liquidity is locked forever. Claims are live.</span></div>
+    <div data-show="failed"><b>Failed.</b> <span>The minimum was not reached. Every bid is refunded in full. No coin, no pool.</span></div>
+  </div>
+  <div class="count" data-show="bidding,reveal"><span data-bind="countdown"></span><small data-show="bidding">to close</small><small data-show="reveal">to open</small></div>
+  <div class="stepper" data-show="opening"><i data-step="1"></i><i data-step="2"></i><i data-step="3"></i><i data-step="4"></i></div>
+</div></div>
+
+<div class="page gutter">
+  <main class="main">
+    <section class="card pad">
+      <div class="ident">
+        <div class="avatar" data-bind="initials"></div>
+        <div>
+          <h1><span data-bind="name"></span> <span class="tk">$<span data-bind="ticker"></span> / NEAR</span></h1>
+          <div class="chips">
+            <span class="chip status" data-bind="phase"></span>
+            <button class="chip" data-copy="frog.plunk.near">frog.plunk.near <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5h10"/></svg></button>
+            <button class="chip" data-copy="ribbit.near">dev ribbit.near</button>
+            <span class="chip">box #12</span>
+          </div>
+        </div>
+        <div class="big">
+          <div data-show="bidding,reveal,opening"><div class="n"><span data-bind="totalIn"></span> Ⓝ</div><div class="d">in the box · <span data-bind="bidders"></span> bidders</div></div>
+          <div data-show="open"><div class="n"><span data-bind="perM"></span> Ⓝ</div><div class="d up">per 1M $<span data-bind="ticker"></span> · +<span data-bind="chg"></span>% since open</div></div>
+          <div data-show="failed"><div class="n"><span data-bind="totalIn"></span> Ⓝ</div><div class="d down">of <span data-bind="minRaise"></span> Ⓝ minimum</div></div>
+        </div>
+      </div>
+      <div class="pills">
+        <div class="pill"><small>Minimum</small><b><span data-bind="minRaise"></span> Ⓝ</b></div>
+        <div class="pill"><small>Bids</small><b data-bind="bids"></b></div>
+        <div class="pill" data-show="bidding,reveal,opening,failed"><small>Closes</small><b data-bind="closesAt"></b></div>
+        <div class="pill" data-show="open"><small>Liquidity</small><b><span data-bind="poolNear"></span> Ⓝ · locked</b></div>
+        <div class="pill" data-show="open"><small>Holders</small><b data-bind="holders"></b></div>
+        <div class="pill"><small>Supply</small><b>1B · 500M sold</b></div>
+        <div class="pill"><small>Fees</small><b>1% raise · 0.2% trade</b></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="chart-head">
+        <div class="seg"><button id="tab-activity" aria-pressed="true">Activity</button><button id="tab-price" aria-pressed="false">Price</button></div>
+        <div class="ranges"><button aria-pressed="false">1H</button><button aria-pressed="true">All</button></div>
+      </div>
+      <div id="chart"></div>
+      <div class="chart-note"><span data-show="bidding,reveal,opening">Totals only. Prices do not exist until the box clears.</span><span data-show="open">Rhea pool · frog.plunk.near / wrap.near</span><span data-show="failed">No pool was created.</span><span data-bind="chartRight"></span></div>
+    </section>
+
+    <section class="card">
+      <div class="tabs" role="tablist">
+        <button role="tab" aria-selected="true" data-tab="bids">Bids</button>
+        <button role="tab" aria-selected="false" data-tab="holders" id="holdersTab">Holders</button>
+        <button role="tab" aria-selected="false" data-tab="mine">Your bids</button>
+        <button role="tab" aria-selected="false" data-tab="details">Details</button>
+      </div>
+      <div class="tabpanel" data-panel="bids"><div class="tbl-wrap"><table><thead><tr><th>Time</th><th>Type</th><th>Account</th><th class="r">Amount</th><th class="r">Max price</th></tr></thead><tbody id="bidsBody"></tbody></table></div></div>
+      <div class="tabpanel" data-panel="holders" hidden><div class="tbl-wrap"><table><thead><tr><th>Account</th><th class="r">Balance</th><th class="r">Share</th></tr></thead><tbody id="holdersBody"></tbody></table></div><div class="empty" id="holdersEmpty" hidden>Holders appear once the box is open.</div></div>
+      <div class="tabpanel" data-panel="mine" hidden><div class="tbl-wrap"><table><thead><tr><th>Bid</th><th>Type</th><th class="r">Amount</th><th class="r">Outcome</th><th class="r"></th></tr></thead><tbody id="mineBody"></tbody></table></div><div class="empty" id="mineEmpty">Connect a wallet to see your bids.</div></div>
+      <div class="tabpanel" data-panel="details" hidden><div class="kv">
+        <div><small>Coin contract</small><b>frog.plunk.near</b></div>
+        <div><small>Launchpad</small><b>plunk.near</b></div>
+        <div><small>Clearing</small><b>uniform price, pro-rata at the margin</b></div>
+        <div><small>Raise fee</small><b>1% of accepted NEAR</b></div>
+        <div><small>Trade fee</small><b>0.1% Plunk + 0.1% Rhea</b></div>
+        <div><small>Fee split</small><b>20 Rhea · 5 protocol · 75 dev</b></div>
+        <div><small>Dev sell tax</small><b>90% → 0% over 24h, paid to holders</b></div>
+        <div><small>Liquidity</small><b>100% of LP held by plunk.near, never withdrawn</b></div>
+        <div><small>Sealed bids</small><b>drand timelock, auto-reveal at close</b></div>
+      </div></div>
+    </section>
+  </main>
+
+  <aside class="side">
+    <section class="card pad">
+      <div class="prog">
+        <div class="row"><span data-show="bidding,reveal,opening,failed">Raise progress</span><span data-show="open">Final raise</span><b><span data-bind="pct"></span></b></div>
+        <div class="bar"><i data-meter="raise"></i><span class="min" style="--m:.1" title="Minimum"></span></div>
+        <div class="row"><span>In: <b><span data-bind="totalIn"></span> Ⓝ</b></span><span>Min: <b><span data-bind="minRaise"></span> Ⓝ</b></span></div>
+      </div>
+
+      <form id="bidForm" data-show="bidding">
+        <div class="seg full" role="radiogroup"><button type="button" data-kind="market" aria-pressed="true">Market</button><button type="button" data-kind="sealed" aria-pressed="false">Max price</button></div>
+        <div class="field"><label>Amount <b id="useBal">Balance: <span data-bind="balance"></span> Ⓝ</b></label><div class="input"><input id="amount" name="amount" type="number" min="0.1" step="0.1" value="10" inputmode="decimal"><span><i></i>NEAR</span></div>
+          <div class="quick"><button type="button" data-q="1">1</button><button type="button" data-q="5">5</button><button type="button" data-q="10">10</button><button type="button" data-q="50">50</button></div></div>
+        <div class="field" id="maxField" hidden><label>Max price <span>NEAR per 1M coins</span></label><div class="input"><input id="max" name="max" type="number" min="0.001" step="0.001" value="1.000" inputmode="decimal"><span>Ⓝ / 1M</span></div></div>
+        <div class="est">
+          <div><span>Bid type</span><b id="kindLabel">Market · pays the clearing price</b></div>
+          <div><span>Share at today's totals</span><b id="share">—</b></div>
+          <div id="sealedNote" hidden><span>Your max is</span><b style="color:var(--purple)">encrypted until close</b></div>
+        </div>
+        <button class="cta" type="submit" id="cta">Connect wallet</button>
+        <div class="xchain"><span class="sol"></span>Paying from Solana? <a href="#" style="color:var(--purple)">Bid with USDC via 1Click</a></div>
+        <p class="fine">You are refunded in full if your max is below the clearing price or the box fails. Clearing is pro-rata at the margin.</p>
+      </form>
+
+      <div data-show="reveal" style="margin-top:14px">
+        <div class="h3"><span>Reveal</span><span data-bind="revealed"></span></div>
+        <div class="meter"><i data-meter="reveal"></i></div>
+        <p class="fine">Each sealed bid unlocks when its drand round lands. Any bid still sealed at the end counts as a market bid.</p>
+      </div>
+
+      <div data-show="opening" style="margin-top:14px">
+        <div class="h3"><span>Opening</span><span data-bind="stepN"></span>/4</div>
+        <div class="meter"><i data-meter="steps"></i></div>
+        <p class="fine">Coin, pool and liquidity take a few transactions. Anyone can nudge it; this page does.</p>
+        <button class="cta ghost" type="button" id="nudge">Nudge it along</button>
+      </div>
+
+      <div data-show="open" style="margin-top:14px">
+        <div class="seg full"><button type="button" data-side="buy" aria-pressed="true">Buy</button><button type="button" class="sell" data-side="sell" aria-pressed="false">Sell</button></div>
+        <div class="field"><label>Amount <b>Balance: <span data-bind="balance"></span> Ⓝ</b></label><div class="input"><input id="tradeAmt" type="number" min="0.1" step="0.1" value="5" inputmode="decimal"><span><i></i><span id="tradeUnit">NEAR</span></span></div>
+          <div class="quick"><button type="button" data-tq="1">1</button><button type="button" data-tq="5">5</button><button type="button" data-tq="25">25</button><button type="button" data-tq="100">100</button></div></div>
+        <div class="est"><div><span>You receive</span><b id="tradeOut">—</b></div><div><span>Fees</span><b>0.1% Plunk + 0.1% Rhea</b></div><div><span>Route</span><b>Rhea · pool #4821</b></div></div>
+        <button class="cta" type="button" id="tradeCta">Buy $FROG</button>
+      </div>
+
+      <div data-show="failed" style="margin-top:14px">
+        <div class="est"><div><span>Your bids</span><b><span data-bind="yourTotal"></span> Ⓝ</b></div><div><span>Refund</span><b>100%</b></div></div>
+        <button class="cta ghost" type="button">Claim refund</button>
+      </div>
+    </section>
+
+    <section class="card pad" data-show="open">
+      <div class="h3"><span>Dev sell tax</span><span><span data-bind="taxRate"></span>%</span></div>
+      <div class="meter"><i data-meter="tax"></i></div>
+      <p class="fine" style="margin-top:8px">If ribbit.near sells in the next <span data-bind="taxLeft"></span>, <span data-bind="taxRate"></span>% of it goes to holders. Falls to 0% at 24h.</p>
+    </section>
+
+    <section class="card pad" data-show="open">
+      <div class="h3"><span>Your position</span></div>
+      <div class="est"><div><span>You plunked</span><b><span data-bind="yourTotal"></span> Ⓝ</b></div><div><span>You hold</span><b><span data-bind="yourCoins"></span>M $FROG</b></div><div><span>Unclaimed</span><b id="unclaimed"><span data-bind="yourCoins"></span>M</b></div></div>
+      <button class="cta" type="button" id="claim" style="margin-top:12px">Claim $FROG</button>
+    </section>
+
+    <section class="card pad">
+      <div class="h3"><span>How a box works</span></div>
+      <div class="rules">
+        <div><span>01</span>Plunk NEAR in. Market bids take the clearing price; a max price seals your bid.</div>
+        <div><span>02</span>At close, sealed bids unlock on their own and everyone clears at one price.</div>
+        <div><span>03</span>The coin is minted, 99% of the raise becomes locked liquidity, and the dev's early sells are taxed to holders.</div>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<nav class="devbar" aria-label="Prototype state"><span>PROTOTYPE STATE</span>
+  <button data-set-state="bidding">Bidding</button><button data-set-state="reveal">Reveal</button><button data-set-state="opening">Opening</button><button data-set-state="open">Open</button><button data-set-state="failed">Failed</button>
+</nav>
+
+<script src="runtime.js"></script>

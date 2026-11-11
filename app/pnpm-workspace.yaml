@@ -1,0 +1,5 @@
+# drand-client 1.2.5 imports @noble/hashes without declaring it; pnpm 11 reads this file, not package.json, for the fix.
+packageExtensions:
+  drand-client@1.2.5:
+    dependencies:
+      '@noble/hashes': ^1.4.0

@@ -1,0 +1,142 @@
+<title>Plunk Marks</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: three equal columns, one mark per column; each column shows the mark at four sizes, on paper and on ink, in a browser tab, and beside the wordmark. */
+  :root {
+    --bg: #0E0B14; --fg: #F3F0FA; --muted: #8F89A3; --accent: #2EE89C; --accent2: #9B6BFF;
+    --paper: #F3F0FA; --ink: #0E0B14; --line: #27222F; color-scheme: dark;
+    --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg: #F3F0FA; --fg: #0E0B14; --muted: #6E6884; --line: #D9D3E6; color-scheme: light } }
+  :root[data-theme="light"] { --bg: #F3F0FA; --fg: #0E0B14; --muted: #6E6884; --line: #D9D3E6; color-scheme: light }
+  body { background: var(--bg); color: var(--fg); font-family: var(--display); padding-block: 40px 64px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  header { max-width: 1100px; margin: 0 auto 32px; }
+  h1 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; letter-spacing: -0.02em; margin: 0 0 8px; text-wrap: balance; }
+  header p { color: var(--muted); max-width: 60ch; margin: 0; line-height: 1.5; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; max-width: 1100px; margin: 0 auto; }
+  .col { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+  .num { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+  h2 { font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -0.01em; }
+  .col > p { margin: 0; color: var(--muted); line-height: 1.5; font-size: 15px; min-height: 3lh; }
+  .hero { aspect-ratio: 1; max-width: 100%; border: 1px solid var(--line); display: grid; place-items: center; }
+  .hero svg { width: 70%; height: 70%; }
+  .paper { background: var(--paper); } .ink { background: var(--ink); }
+  .row { display: flex; align-items: flex-end; gap: 18px; padding: 16px; border: 1px solid var(--line); }
+  .row svg { display: block; }
+  .cap { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 6px; text-align: center; }
+  .tab { display: flex; align-items: center; gap: 8px; background: #1C1826; color: #F3F0FA; border-radius: 8px 8px 0 0; padding: 8px 12px; font-size: 13px; width: fit-content; }
+  .tab svg { width: 16px; height: 16px; }
+  .tabbar { background: #15111E; padding: 8px 8px 0; border: 1px solid var(--line); }
+  .word { display: flex; align-items: center; gap: 12px; padding: 18px; border: 1px solid var(--line); font-weight: 800; font-size: 34px; letter-spacing: -0.03em; }
+  .word svg { width: 40px; height: 40px; }
+  .label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .note { max-width: 1100px; margin: 40px auto 0; color: var(--muted); line-height: 1.6; font-size: 15px; }
+  .note strong { color: var(--fg); }
+</style>
+
+<header>
+  <h1>Three marks for Plunk</h1>
+  <p>Same idea in all three: a box, its lid, and the gap between them. The gap is the sealed bid. The lid is the one price line. Green box, purple eyes and drop, on black. Shown at 256, 64, 32 and 16 pixels, on black and on light, in a browser tab and beside the wordmark.</p>
+</header>
+
+<div class="grid">
+
+  <section class="col">
+    <span class="num">Mark 1</span>
+    <h2>Peek</h2>
+    <p>Lid floating, two eyes in the dark gap. The mascot version: it can blink, dart, and slam.</p>
+    <div class="hero ink"><svg viewBox="0 0 64 64"><use href="#peek"/></svg></div>
+    <div class="row paper">
+      <div><svg viewBox="0 0 64 64" width="64" height="64"><use href="#peek"/></svg><div class="cap">64</div></div>
+      <div><svg viewBox="0 0 64 64" width="32" height="32"><use href="#peek"/></svg><div class="cap">32</div></div>
+      <div><svg viewBox="0 0 64 64" width="16" height="16"><use href="#peek"/></svg><div class="cap">16</div></div>
+    </div>
+    <div class="row ink">
+      <div><svg viewBox="0 0 64 64" width="64" height="64"><use href="#peek-dark"/></svg><div class="cap">64 on ink</div></div>
+      <div><svg viewBox="0 0 64 64" width="32" height="32"><use href="#peek-dark"/></svg><div class="cap">32</div></div>
+      <div><svg viewBox="0 0 64 64" width="16" height="16"><use href="#peek-dark"/></svg><div class="cap">16</div></div>
+    </div>
+    <div class="tabbar"><div class="tab"><svg viewBox="0 0 64 64"><use href="#peek"/></svg>Plunk · box #12</div></div>
+    <div class="word"><svg viewBox="0 0 64 64"><use href="#peek"/></svg>plunk</div>
+  </section>
+
+  <section class="col">
+    <span class="num">Mark 2</span>
+    <h2>Drop</h2>
+    <p>One tangerine drop falling into a tilted lid. The verb: you plunk NEAR in. No face, so it is the quieter, more "protocol" option.</p>
+    <div class="hero ink"><svg viewBox="0 0 64 64"><use href="#drop"/></svg></div>
+    <div class="row paper">
+      <div><svg viewBox="0 0 64 64" width="64" height="64"><use href="#drop"/></svg><div class="cap">64</div></div>
+      <div><svg viewBox="0 0 64 64" width="32" height="32"><use href="#drop"/></svg><div class="cap">32</div></div>
+      <div><svg viewBox="0 0 64 64" width="16" height="16"><use href="#drop"/></svg><div class="cap">16</div></div>
+    </div>
+    <div class="row ink">
+      <div><svg viewBox="0 0 64 64" width="64" height="64"><use href="#drop-dark"/></svg><div class="cap">64 on ink</div></div>
+      <div><svg viewBox="0 0 64 64" width="32" height="32"><use href="#drop-dark"/></svg><div class="cap">32</div></div>
+      <div><svg viewBox="0 0 64 64" width="16" height="16"><use href="#drop-dark"/></svg><div class="cap">16</div></div>
+    </div>
+    <div class="tabbar"><div class="tab"><svg viewBox="0 0 64 64"><use href="#drop"/></svg>Plunk · box #12</div></div>
+    <div class="word"><svg viewBox="0 0 64 64"><use href="#drop"/></svg>plunk</div>
+  </section>
+
+  <section class="col">
+    <span class="num">Mark 3</span>
+    <h2>Pop</h2>
+    <p>The box is open and the lid has flipped up into a flat line: the one price. Eyes look up at it. Outline box, so it is the lightest of the three.</p>
+    <div class="hero ink"><svg viewBox="0 0 64 64"><use href="#pop"/></svg></div>
+    <div class="row paper">
+      <div><svg viewBox="0 0 64 64" width="64" height="64"><use href="#pop"/></svg><div class="cap">64</div></div>
+      <div><svg viewBox="0 0 64 64" width="32" height="32"><use href="#pop"/></svg><div class="cap">32</div></div>
+      <div><svg viewBox="0 0 64 64" width="16" height="16"><use href="#pop"/></svg><div class="cap">16</div></div>
+    </div>
+    <div class="row ink">
+      <div><svg viewBox="0 0 64 64" width="64" height="64"><use href="#pop-dark"/></svg><div class="cap">64 on ink</div></div>
+      <div><svg viewBox="0 0 64 64" width="32" height="32"><use href="#pop-dark"/></svg><div class="cap">32</div></div>
+      <div><svg viewBox="0 0 64 64" width="16" height="16"><use href="#pop-dark"/></svg><div class="cap">16</div></div>
+    </div>
+    <div class="tabbar"><div class="tab"><svg viewBox="0 0 64 64"><use href="#pop"/></svg>Plunk · box #12</div></div>
+    <div class="word"><svg viewBox="0 0 64 64"><use href="#pop"/></svg>plunk</div>
+  </section>
+
+</div>
+
+<p class="note"><strong>My read.</strong> Peek is the strongest at 16 pixels and is the only one that works as a mascot on the box page. Pop is the cleanest as a pure logo and tells the "one price" story best. Drop is the most elegant at large sizes but at 16 pixels it starts to look like a lighter or a candle. Green is one step off NEAR green and purple one step off Solana purple, so the marks read as Plunk rather than as either chain.</p>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="peek">
+      <rect x="10" y="28" width="44" height="28" rx="5" fill="#2EE89C"/>
+      <rect x="13" y="20" width="38" height="11" fill="#1C1826"/>
+      <rect x="6" y="9" width="52" height="10" rx="3" fill="#2EE89C"/>
+      <circle cx="25" cy="25" r="3" fill="#9B6BFF"/><circle cx="39" cy="25" r="3" fill="#9B6BFF"/>
+    </g>
+    <g id="peek-dark">
+      <rect x="10" y="28" width="44" height="28" rx="5" fill="#2EE89C"/>
+      <rect x="13" y="20" width="38" height="11" fill="#1C1826"/>
+      <rect x="6" y="9" width="52" height="10" rx="3" fill="#2EE89C"/>
+      <circle cx="25" cy="25" r="3" fill="#9B6BFF"/><circle cx="39" cy="25" r="3" fill="#9B6BFF"/>
+    </g>
+    <g id="drop">
+      <rect x="10" y="30" width="44" height="26" rx="5" fill="#2EE89C"/>
+      <rect x="8" y="22" width="48" height="9" rx="3" fill="#2EE89C" transform="rotate(-12 56 31)"/>
+      <path d="M20 4 C20 4 11 15 11 20 A9 9 0 0 0 29 20 C29 15 20 4 20 4 Z" fill="#9B6BFF"/>
+    </g>
+    <g id="drop-dark">
+      <rect x="10" y="30" width="44" height="26" rx="5" fill="#2EE89C"/>
+      <rect x="8" y="22" width="48" height="9" rx="3" fill="#2EE89C" transform="rotate(-12 56 31)"/>
+      <path d="M20 4 C20 4 11 15 11 20 A9 9 0 0 0 29 20 C29 15 20 4 20 4 Z" fill="#9B6BFF"/>
+    </g>
+    <g id="pop">
+      <path d="M14 26 V49 A7 7 0 0 0 21 56 H43 A7 7 0 0 0 50 49 V26" fill="none" stroke="#2EE89C" stroke-width="8" stroke-linecap="round"/>
+      <rect x="6" y="8" width="52" height="7" rx="3.5" fill="#9B6BFF"/>
+      <circle cx="26" cy="38" r="3.5" fill="#9B6BFF"/><circle cx="38" cy="38" r="3.5" fill="#9B6BFF"/>
+    </g>
+    <g id="pop-dark">
+      <path d="M14 26 V49 A7 7 0 0 0 21 56 H43 A7 7 0 0 0 50 49 V26" fill="none" stroke="#2EE89C" stroke-width="8" stroke-linecap="round"/>
+      <rect x="6" y="8" width="52" height="7" rx="3.5" fill="#9B6BFF"/>
+      <circle cx="26" cy="38" r="3.5" fill="#9B6BFF"/><circle cx="38" cy="38" r="3.5" fill="#9B6BFF"/>
+    </g>
+  </defs>
+</svg>

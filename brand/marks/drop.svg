@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Plunk — Drop</title>
+  <rect x="10" y="30" width="44" height="26" rx="5" fill="#2EE89C"/>
+  <rect x="8" y="22" width="48" height="9" rx="3" fill="#2EE89C" transform="rotate(-12 56 31)"/>
+  <path d="M20 4 C20 4 11 15 11 20 A9 9 0 0 0 29 20 C29 15 20 4 20 4 Z" fill="#9B6BFF"/>
+</svg>

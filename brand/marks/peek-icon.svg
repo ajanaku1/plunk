@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <title>Plunk — Peek app icon</title>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1A1526"/>
+      <stop offset="1" stop-color="#0B0910"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.42" r="0.5">
+      <stop offset="0" stop-color="#9B6BFF" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#9B6BFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4DF5B0"/>
+      <stop offset="1" stop-color="#1FC784"/>
+    </linearGradient>
+    <linearGradient id="lid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6FFFC4"/>
+      <stop offset="1" stop-color="#2EE89C"/>
+    </linearGradient>
+    <linearGradient id="lidEdge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1FC784"/>
+      <stop offset="1" stop-color="#12935F"/>
+    </linearGradient>
+    <linearGradient id="slot" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#060509"/>
+      <stop offset="1" stop-color="#15111F"/>
+    </linearGradient>
+    <radialGradient id="eye" cx="0.38" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="#D9C6FF"/>
+      <stop offset="0.45" stop-color="#9B6BFF"/>
+      <stop offset="1" stop-color="#6A3FD6"/>
+    </radialGradient>
+    <radialGradient id="eyeGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#9B6BFF" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#9B6BFF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="6"/>
+      <feOffset dy="8" result="o"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.55"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dy="3" result="o"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.5"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <clipPath id="tileClip"><rect width="256" height="256" rx="58"/></clipPath>
+  </defs>
+
+  <!-- squircle tile -->
+  <rect width="256" height="256" rx="58" fill="url(#tile)"/>
+  <g clip-path="url(#tileClip)">
+    <rect width="256" height="256" fill="url(#halo)"/>
+    <!-- floor contact shadow -->
+    <ellipse cx="128" cy="214" rx="78" ry="10" fill="#000" opacity="0.45"/>
+  </g>
+
+  <!-- box body -->
+  <g filter="url(#shadow)">
+    <rect x="52" y="112" width="152" height="96" rx="18" fill="url(#body)"/>
+  </g>
+  <!-- box top lip (inner edge) -->
+  <rect x="52" y="112" width="152" height="10" rx="5" fill="#13A06A" opacity="0.9"/>
+  <!-- body highlight -->
+  <rect x="62" y="124" width="132" height="6" rx="3" fill="#FFFFFF" opacity="0.14"/>
+  <!-- body side sheen -->
+  <rect x="60" y="130" width="8" height="60" rx="4" fill="#FFFFFF" opacity="0.08"/>
+
+  <!-- dark slot (inside the box) -->
+  <rect x="62" y="86" width="132" height="34" rx="6" fill="url(#slot)"/>
+  <!-- eye glow -->
+  <circle cx="102" cy="102" r="22" fill="url(#eyeGlow)"/>
+  <circle cx="154" cy="102" r="22" fill="url(#eyeGlow)"/>
+  <!-- eyes -->
+  <circle cx="102" cy="102" r="10" fill="url(#eye)"/>
+  <circle cx="154" cy="102" r="10" fill="url(#eye)"/>
+  <circle cx="98.5" cy="98" r="3" fill="#FFFFFF" opacity="0.9"/>
+  <circle cx="150.5" cy="98" r="3" fill="#FFFFFF" opacity="0.9"/>
+
+  <!-- lid -->
+  <g filter="url(#soft)">
+    <!-- lid thickness -->
+    <rect x="40" y="62" width="176" height="26" rx="10" fill="url(#lidEdge)"/>
+    <!-- lid top face -->
+    <rect x="40" y="56" width="176" height="24" rx="10" fill="url(#lid)"/>
+  </g>
+  <!-- lid specular -->
+  <rect x="54" y="61" width="90" height="5" rx="2.5" fill="#FFFFFF" opacity="0.5"/>
+  <!-- lid underside shadow onto slot -->
+  <rect x="62" y="86" width="132" height="8" fill="#000" opacity="0.5"/>
+</svg>

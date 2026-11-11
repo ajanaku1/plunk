@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 64" width="260" height="64">
+  <title>Plunk wordmark</title>
+  <rect width="64" height="64" rx="14" fill="#F3F0FA"/>
+  <rect x="10" y="30" width="44" height="26" rx="5" fill="#2EE89C"/>
+  <rect x="13" y="22" width="38" height="11" fill="#0E0B14"/>
+  <rect x="6" y="11" width="52" height="10" rx="3" fill="#2EE89C"/>
+  <circle cx="25" cy="27" r="3.2" fill="#9B6BFF"/>
+  <circle cx="39" cy="27" r="3.2" fill="#9B6BFF"/>
+  <text x="80" y="46" font-family="Archivo, 'Helvetica Neue', Arial, sans-serif" font-weight="800" font-size="40" letter-spacing="-1.5" fill="currentColor">plunk</text>
+</svg>

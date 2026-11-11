@@ -1,0 +1,109 @@
+/* Plunk design tokens. Source of truth: brand/BRAND-TRUTH.md. Dark first; light supported. */
+
+:root {
+  /* brand */
+  --green: #2ee89c;
+  --green-strong: #1bb97a;
+  --purple: #9b6bff;
+  --purple-soft: #c9b3ff;
+  --black: #0e0b14;
+  --paper: #f3f0fa;
+
+  /* surfaces and text (dark) */
+  --bg: #0e0b14;
+  --surface: #15111e;
+  --surface-2: #1c1826;
+  --line: #27222f;
+  --line-2: #332d3d;
+  --fg: #f3f0fa;
+  --muted: #8f89a3;
+  --faint: #5e586f;
+  --accent: var(--green);
+  --accent-fg: #0e0b14;
+  --accent-2: var(--purple);
+
+  /* states */
+  --ok: #2ee89c;
+  --warn: #ffc24d;
+  --bad: #ff5c7a;
+
+  /* type */
+  --font-display: var(--font-archivo, "Archivo"), "Helvetica Neue", Arial, sans-serif;
+  --font-body: var(--font-archivo, "Archivo"), "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-plex-mono, "IBM Plex Mono"), ui-monospace, Menlo, monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.5rem;
+
+  /* space (4px base) */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-6: 1.5rem;
+  --s-8: 2rem;
+  --s-12: 3rem;
+
+  /* shape and motion */
+  --r-sm: 6px;
+  --r-md: 12px;
+  --r-lg: 20px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --fast: 120ms;
+  --slow: 320ms;
+
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f3f0fa;
+    --surface: #ffffff;
+    --surface-2: #ece7f7;
+    --line: #d9d3e6;
+    --line-2: #cfc8e0;
+    --fg: #0e0b14;
+    --muted: #6e6884;
+    --faint: #a39cb8;
+    --accent: var(--green-strong);
+    --accent-fg: #0e0b14;
+    --ok: var(--green-strong);
+    color-scheme: light;
+  }
+}
+
+:root[data-theme="light"] {
+  --bg: #f3f0fa;
+  --surface: #ffffff;
+  --surface-2: #ece7f7;
+  --line: #d9d3e6;
+  --line-2: #cfc8e0;
+  --fg: #0e0b14;
+  --muted: #6e6884;
+  --faint: #a39cb8;
+  --accent: var(--green-strong);
+  --accent-fg: #0e0b14;
+  --ok: var(--green-strong);
+  color-scheme: light;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --fast: 0ms;
+    --slow: 0ms;
+  }
+}

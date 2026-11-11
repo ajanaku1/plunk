@@ -1,0 +1,14 @@
+//! Test helper: publishes the given wasm as a global contract (by hash) from this account.
+use near_sdk::json_types::Base64VecU8;
+use near_sdk::{env, near, Promise};
+
+#[near(contract_state)]
+#[derive(Default)]
+pub struct Publisher {}
+
+#[near]
+impl Publisher {
+    pub fn publish(&mut self, code: Base64VecU8) -> Promise {
+        Promise::new(env::current_account_id()).deploy_global_contract(code.0)
+    }
+}
