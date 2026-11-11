@@ -8,6 +8,17 @@ snipe, bundle or herd on. The dev's own coins sit in escrow, and selling them ea
 
 Built at NEAR HACKATHON 2026. **Unaudited.** Testnet first; mainnet launch is a single signed deploy.
 
+![Plunk home](docs/images/home.png)
+
+## Live demo
+
+**[plunk-lyart.vercel.app](https://plunk-lyart.vercel.app)**, pointed at `plunk.testnet`. Connect a
+testnet wallet, open box #0 to trade $FON on its Rhea pool, or make a box of your own.
+
+| Box page | Make a box |
+|---|---|
+| ![Box page](docs/images/box.png) | ![Make a box](docs/images/make.png) |
+
 ## The problem
 
 On every launchpad, whoever sees or acts first wins. Devs bundle, snipers front-run the curve, and
@@ -46,7 +57,8 @@ accounts with faucet NEAR (a dev and two buyers). Wrap some NEAR to `wrap.testne
    claim, and trades → harvest → claim against real copies of wNEAR and Rhea.
 2. **Deploy a launchpad to testnet** (one time, see "Deploy your own" below) and put its account id
    in `app/config.ts`. See: `/` shows an empty grid.
-3. **Run the app.** `pnpm --dir app install && pnpm --dir app dev`. See: the home page.
+3. **Run the app.** `pnpm --dir app install && pnpm --dir app dev`. See: the home page. Image
+   uploads need `app/.env.local` with the two Pinata values from `app/.env.example`.
 4. **Make a box** as the dev: 2-minute room, minimum 1 NEAR, fee 3%, tax window 1 day. See: the
    creation fee on the button before you sign; the box in the live strip.
 5. **Bid** from buyer A with a max price and from buyer B at market. See: totals and bidder count
