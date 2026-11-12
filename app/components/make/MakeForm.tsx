@@ -12,7 +12,7 @@ import { txLink } from '@/lib/txlink';
 import { ALL_DEV, breakdown, pct, splitIsValid } from '@/lib/fees';
 import { formatNear, parseNear } from '@/lib/format';
 import { tgas } from '@/lib/gas';
-import { type BoxArgs, FEE_BPS, ROOM_SECS, type Split, TAX_WINDOW_SECS, TICKER_RE } from '@/lib/launchpad';
+import { type BoxArgs, FEE_BPS, ROOM_SECS, SOLANA_SHARE_BPS, type Split, TAX_WINDOW_SECS, TICKER_RE } from '@/lib/launchpad';
 import { useNear } from '@/providers/near-provider';
 import { useToast } from '@/providers/toast';
 
@@ -28,11 +28,12 @@ type Draft = {
   minRaise: string;
   feeBps: number;
   taxDays: number;
+  solanaPct: number;
   shared: boolean;
   split: Split;
 };
 
-const INITIAL: Draft = { name: '', ticker: '', image: '', description: '', roomMin: 5, minRaise: '10', feeBps: 100, taxDays: 1, shared: false, split: ALL_DEV };
+const INITIAL: Draft = { name: '', ticker: '', image: '', description: '', roomMin: 5, minRaise: '10', feeBps: 100, taxDays: 1, solanaPct: 30, shared: false, split: ALL_DEV };
 
 /** Mirrors contracts/launchpad/src/types.rs::validate so the button only enables what the contract accepts. */
 function problems(d: Draft, floor: bigint | undefined, ticker: TickerCheck): string[] {
@@ -47,6 +48,7 @@ function problems(d: Draft, floor: bigint | undefined, ticker: TickerCheck): str
   if (d.taxDays * 86_400 < TAX_WINDOW_SECS[0] || d.taxDays * 86_400 > TAX_WINDOW_SECS[1]) out.push('Dev-tax window: 1–7 days.');
   if (raise === null) out.push('Minimum raise must be a number.');
   else if (floor !== undefined && raise < floor) out.push(`Minimum raise is at least ${formatNear(floor, 2)} NEAR.`);
+  if (d.solanaPct * 100 < SOLANA_SHARE_BPS[0] || d.solanaPct * 100 > SOLANA_SHARE_BPS[1]) out.push('Solana share: 0–50%.');
   if (d.shared && !splitIsValid(d.split)) out.push('Fee split must add up to 100%.');
   return out;
 }
@@ -59,6 +61,7 @@ function toArgs(d: Draft): BoxArgs {
     fee_bps: d.feeBps,
     split: d.shared ? d.split : null,
     tax_window_secs: d.taxDays * 86_400,
+    solana_share_bps: d.solanaPct * 100,
   };
 }
 
@@ -156,6 +159,7 @@ function Summary({ d, creationFee, issues, busy, connected }: { d: Draft; creati
         <div><span>Raise fee</span><b>1% of accepted NEAR at Open</b></div>
         <div><span>Supply</span><b>1B · 500M to bidders · 500M to the pool</b></div>
         <div><span>Liquidity</span><b>locked under {launchpadId} forever</b></div>
+        {d.solanaPct > 0 && <div><span>Solana share</span><b>{d.solanaPct}% held at Open</b></div>}
       </div>
       <button className="cta" type="submit" disabled={busy || (connected && (issues.length > 0 || !creationFee))}>{label}</button>
       {connected && issues.length > 0 && <p className="err">{issues[0]}</p>}
@@ -224,6 +228,10 @@ export function MakeForm() {
           <Field id="tax" label="Dev sell tax window" hint={`${d.taxDays} day${d.taxDays === 1 ? '' : 's'}`}>
             <input id="tax" className="range" type="range" min={1} max={7} step={1} value={d.taxDays} onChange={(e) => patch({ taxDays: Number(e.target.value) })} />
             <p className="hint">Your own sells are taxed 90% → 0% over this window; the tax goes to holders. Buyers see it before they bid.</p>
+          </Field>
+          <Field id="sol" label="Solana share of the pool" hint={d.solanaPct === 0 ? 'off' : `${d.solanaPct}%`}>
+            <input id="sol" className="range" type="range" min={0} max={50} step={5} value={d.solanaPct} onChange={(e) => patch({ solanaPct: Number(e.target.value) })} />
+            <p className="hint">At Open this share of the pool&apos;s coins and NEAR is held by the box for the coin&apos;s Solana pool instead of going to Rhea. The rest seeds Rhea as usual.</p>
           </Field>
         </section>
 

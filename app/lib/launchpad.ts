@@ -107,7 +107,11 @@ export type BoxArgs = {
   fee_bps: number;
   split: Split | null;
   tax_window_secs: number;
+  /** FR-033: share of the LP half held at Open for the coin's Solana pool, 0–5000 bps. */
+  solana_share_bps: number;
 };
+
+export const SOLANA_SHARE_BPS: [number, number] = [0, 5000];
 
 /** The five states the page renders. Closed and Reveal are derived from time while on-chain phase is Bidding. */
 export type BoxState = 'bidding' | 'reveal' | 'opening' | 'open' | 'failed';
