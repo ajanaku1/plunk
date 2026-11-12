@@ -12,7 +12,7 @@ Built at NEAR HACKATHON 2026. **Unaudited.** Testnet first; mainnet launch is a 
 
 ## Live demo
 
-**[plunk-lyart.vercel.app](https://plunk-lyart.vercel.app)**, pointed at `plunk.testnet`. Connect a
+**[plunkfun.vercel.app](https://plunkfun.vercel.app)**, pointed at `plunk.testnet`. Connect a
 testnet wallet, open box #0 to trade $FON on its Rhea pool, or make a box of your own.
 
 | Box page | Make a box |
