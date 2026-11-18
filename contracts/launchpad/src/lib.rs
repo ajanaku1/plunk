@@ -12,10 +12,13 @@ pub mod types;
 
 use near_sdk::json_types::{Base58CryptoHash, U128};
 use near_sdk::store::{IterableMap, LookupMap, LookupSet};
-use near_sdk::{assert_one_yocto, env, near, require, AccountId, BorshStorageKey, NearToken, PanicOnDefault, Promise};
+use near_sdk::serde_json::json;
+use near_sdk::{assert_one_yocto, env, near, require, AccountId, BorshStorageKey, Gas, NearToken, PanicOnDefault, Promise, PromiseError};
 use types::{validate, BoxArgs, LaunchBox, Phase, Split};
 
 const NEAR: u128 = 1_000_000_000_000_000_000_000_000;
+const GAS_FT: Gas = Gas::from_tgas(15);
+const GAS_CALLBACK: Gas = Gas::from_tgas(10);
 
 #[near]
 #[derive(BorshStorageKey)]
@@ -115,9 +118,36 @@ impl Launchpad {
         &self.config
     }
 
-    /// 1% raise fees collected so far, held as wNEAR (FR-012).
+    /// Protocol fees booked so far (1% raise fee + protocol share of harvests), held as wNEAR (FR-012).
     pub fn get_protocol_fees(&self) -> U128 {
         U128(self.protocol_fees)
+    }
+
+    /// Owner only: sends booked protocol fees (all when `amount` is omitted) as wNEAR to `receiver_id`,
+    /// which must already be registered on wNEAR. The amount is restored if the transfer fails.
+    #[payable]
+    pub fn withdraw_protocol_fees(&mut self, receiver_id: AccountId, amount: Option<U128>) -> Promise {
+        assert_one_yocto();
+        self.assert_owner();
+        require!(receiver_id != env::current_account_id(), "receiver must not be the launchpad");
+        let amount = amount.map_or(self.protocol_fees, |a| a.0);
+        require!(amount > 0, "nothing to withdraw");
+        require!(amount <= self.protocol_fees, "more than the protocol fees");
+        self.protocol_fees -= amount;
+        ref_ext::ext_ft::ext(self.config.wnear.clone())
+            .with_attached_deposit(NearToken::from_yoctonear(1))
+            .with_static_gas(GAS_FT)
+            .ft_transfer(receiver_id.clone(), U128(amount), Some("plunk protocol fees".into()))
+            .then(Self::ext(env::current_account_id()).with_static_gas(GAS_CALLBACK).on_fees_withdrawn(U128(amount)))
+    }
+
+    #[private]
+    pub fn on_fees_withdrawn(&mut self, amount: U128, #[callback_result] r: Result<(), PromiseError>) {
+        if r.is_err() {
+            self.protocol_fees += amount.0;
+        } else {
+            events::emit("fees_withdrawn", &json!({ "amount": amount }));
+        }
     }
 }
 
