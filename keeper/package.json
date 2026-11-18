@@ -3,8 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.22.2" },
-  "scripts": { "harvest": "node harvest.ts", "typecheck": "tsc --noEmit" },
-  "dependencies": { "near-api-js": "7.4.0" },
-  "devDependencies": { "@types/node": "26.6.6", "typescript": "6.0.3" }
+  "engines": {
+    "node": ">=22.22.2"
+  },
+  "scripts": {
+    "harvest": "node harvest.ts",
+    "reveal": "node reveal.ts",
+    "test": "node --test sealed.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "near-api-js": "7.4.0",
+    "tlock-js": "0.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "typescript": "6.0.3"
+  }
 }
