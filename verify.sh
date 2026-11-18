@@ -68,6 +68,8 @@ ctest   phase-3 "split shifts one-way only (FR-019)" -p plunk-launchpad shift_sp
 # --- phase-4: US3 trade + earn (T025–T029, T037) ---
 ctest   phase-4 "harvest: 20/5/75 by sqrt(k) growth; coin fees cover buyback first; same-epoch no-op; claim pays (FR-016/017/018)" -p integration harvest -- --ignored
 checksh phase-4 "keeper typechecks (T027)" 'cd keeper && pnpm exec tsc --noEmit'
+checksh phase-4 "reveal keeper: window and payload tests (FR-007/009)" 'cd keeper && pnpm test'
+checksh phase-4 "reveal workflow polls under a concurrency group, no inline keys" 'grep -q "concurrency:" .github/workflows/reveal.yml && grep -q "pnpm reveal" .github/workflows/reveal.yml && ! grep -qE "ed25519:[1-9A-HJ-NP-Za-km-z]{40,}" .github/workflows/reveal.yml'
 checksh phase-4 "hourly workflow at :17 with manual trigger, no inline keys (R6)" 'f=.github/workflows/harvest.yml; test -f $f && grep -q "17 \* \* \* \*" $f && grep -q workflow_dispatch $f && grep -q "secrets.KEEPER_KEY" $f && ! grep -Eq "ed25519:[1-9A-HJ-NP-Za-km-z]{20,}" $f'
 
 # --- phase-5: US4 cross-chain, or the logged K1 cut (T030–T031) ---

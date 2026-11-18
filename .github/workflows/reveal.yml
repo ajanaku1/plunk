@@ -1,0 +1,36 @@
+name: reveal
+# Rooms last 2–10 minutes and reveals are accepted for 60 s after close, so one job watches
+# continuously for ~6 h. The schedule only restarts it: the concurrency group keeps one running
+# and one queued, so the next watch starts as soon as the current one ends.
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: reveal
+  cancel-in-progress: false
+jobs:
+  reveal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    defaults:
+      run:
+        working-directory: keeper
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm reveal
+        env:
+          REVEAL_WATCH_MINUTES: "345"
+          NEAR_NETWORK: ${{ vars.NEAR_NETWORK }}
+          LAUNCHPAD_ID: ${{ vars.LAUNCHPAD_ID }}
+          KEEPER_ACCOUNT: ${{ secrets.KEEPER_ACCOUNT }}
+          KEEPER_KEY: ${{ secrets.KEEPER_KEY }}
