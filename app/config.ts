@@ -9,8 +9,8 @@ const launchpadPerNetwork: Record<NetworkId, string> = {
 export const networkId: NetworkId = 'testnet';
 export const launchpadId: string = launchpadPerNetwork[networkId];
 export const rpcUrls: Record<NetworkId, string[]> = {
-  mainnet: ['https://free.rpc.fastnear.com'],
-  testnet: ['https://test.rpc.fastnear.com'],
+  mainnet: ['https://free.rpc.fastnear.com', 'https://rpc.mainnet.near.org'],
+  testnet: ['https://test.rpc.fastnear.com', 'https://rpc.testnet.near.org'],
 };
 
 const explorerPerNetwork: Record<NetworkId, string> = {

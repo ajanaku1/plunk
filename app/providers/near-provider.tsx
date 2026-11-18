@@ -1,10 +1,11 @@
 'use client';
 
 import { createContext, type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { FailoverRpcProvider, getTransactionLastResult, JsonRpcProvider } from 'near-api-js';
+import { getTransactionLastResult } from 'near-api-js';
 import { NearConnector, type EventMap } from '@hot-labs/near-connect';
 
 import { networkId, rpcUrls } from '@/config';
+import { makeRpc } from '@/lib/rpc';
 
 type Wallet = Awaited<ReturnType<NearConnector['wallet']>>;
 export type ViewParams = { contractId: string; method: string; args?: Record<string, unknown> };
@@ -77,11 +78,8 @@ function useWalletSession(connector: NearConnector) {
 
 export function NearProvider({ children }: PropsWithChildren) {
   const connector = useMemo(() => new NearConnector({ network: networkId, providers: rpcUrls }), []);
-  // One URL gets a plain provider so RPC errors keep their message instead of "Exceeded 1 providers".
-  const rpc = useMemo(() => {
-    const providers = rpcUrls[networkId].map((url) => new JsonRpcProvider({ url }));
-    return providers.length === 1 ? providers[0] : new FailoverRpcProvider(providers);
-  }, []);
+  // Falls back to the next endpoint only when one is down, so contract errors keep their message.
+  const rpc = useMemo(() => makeRpc(rpcUrls[networkId]), []);
   const { wallet, setWallet, accountId, setAccountId, loading } = useWalletSession(connector);
   const txRef = useRef<string | undefined>(undefined);
   const lastTx = useCallback(() => txRef.current, []);

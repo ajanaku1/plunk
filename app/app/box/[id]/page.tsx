@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { JsonRpcProvider } from 'near-api-js';
 import { BoxView } from '@/components/box/BoxView';
 import { launchpadId, networkId, rpcUrls } from '@/config';
+import { makeRpc } from '@/lib/rpc';
 import type { LaunchBox } from '@/lib/launchpad';
 
 type Params = { params: Promise<{ id: string }> };
@@ -14,7 +14,7 @@ function parseId(raw: string): number | null {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
   try {
-    const rpc = new JsonRpcProvider({ url: rpcUrls[networkId][0] });
+    const rpc = makeRpc(rpcUrls[networkId]);
     const box = (await rpc.callFunction({ contractId: launchpadId, method: 'get_box', args: { id: Number(id) } })) as LaunchBox | null;
     if (box) return { title: `${box.meta.name} $${box.meta.ticker.toUpperCase()}`, description: `Box #${id} on Plunk: one clearing price for everyone.` };
   } catch {

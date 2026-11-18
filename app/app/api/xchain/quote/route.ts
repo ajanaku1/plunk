@@ -2,19 +2,19 @@
  * T030 (FR-027): POST = 1Click quote proxy with the 5-minute cutoff and the existing-account
  * check. GET ?depositAddress= proxies the status; GET ?tokens=1 lists 1Click's assets (cached).
  */
-import { JsonRpcProvider } from 'near-api-js';
 import { NextResponse } from 'next/server';
 import { launchpadId, networkId, rpcUrls } from '@/config';
+import { makeRpc } from '@/lib/rpc';
 import type { Config, LaunchBox } from '@/lib/launchpad';
 import { ONE_CLICK } from '@/lib/xchain';
 import { handleQuote, postOneClick } from './handler';
 
 export const dynamic = 'force-dynamic';
 
-const rpc = () => new JsonRpcProvider({ url: rpcUrls[networkId][0] });
+const rpc = makeRpc(rpcUrls[networkId]);
 
 async function wnear(): Promise<string> {
-  const c = (await rpc().callFunction({ contractId: launchpadId, method: 'get_config', args: {} })) as Config;
+  const c = (await rpc.callFunction({ contractId: launchpadId, method: 'get_config', args: {} })) as Config;
   return c.wnear;
 }
 
@@ -24,8 +24,8 @@ export async function POST(req: Request): Promise<NextResponse> {
     const reply = await handleQuote(raw, {
       launchpadId,
       wnear: await wnear(),
-      getBox: async (id) => (await rpc().callFunction({ contractId: launchpadId, method: 'get_box', args: { id } })) as LaunchBox | null,
-      accountExists: (id) => rpc().viewAccount({ accountId: id }).then(() => true, () => false),
+      getBox: async (id) => (await rpc.callFunction({ contractId: launchpadId, method: 'get_box', args: { id } })) as LaunchBox | null,
+      accountExists: (id) => rpc.viewAccount({ accountId: id }).then(() => true, () => false),
       oneClick: postOneClick,
       now: Date.now,
     });
