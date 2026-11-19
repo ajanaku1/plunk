@@ -103,6 +103,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const railLabel = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
   return (
     <div className="app" data-rail={collapsed ? 'collapsed' : undefined}>
+      <a className="skip" href="#content">Skip to content</a>
       <aside className="rail">
         <div className="rail-head">
           <Link className="logo" href="/" title="Plunk">
@@ -128,6 +129,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <Tape />
           <WalletMenu />
         </header>
+        <span id="content" tabIndex={-1} />
         {children}
       </div>
       <nav className="tabbar gutter"><NavLinks path={path} /></nav>

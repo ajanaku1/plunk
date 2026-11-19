@@ -33,7 +33,7 @@ function ProfileHead({ account, p, mine }: { account: string; p: ProfileData; mi
           <h1 style={{ wordBreak: 'break-all' }}>{account}{mine && <span className="tk">you</span>}</h1>
           {p.loaded && p.holdings.length > 0 && (
             <div className="pf-coins" aria-label={`${p.holdings.length} coins held`}>
-              {p.holdings.slice(0, 7).map((h) => <Link key={h.box.id} href={`/box/${h.box.id}`} title={h.box.meta.name}><Coin image={h.box.meta.image} ticker={h.box.meta.ticker.toUpperCase()} size={34} /></Link>)}
+              {p.holdings.slice(0, 7).map((h) => <Link key={h.box.id} href={`/box/${h.box.id}`} title={h.box.meta.name} aria-label={`${h.box.meta.name} box`}><Coin image={h.box.meta.image} ticker={h.box.meta.ticker.toUpperCase()} size={34} /></Link>)}
             </div>
           )}
           <div className="chips">

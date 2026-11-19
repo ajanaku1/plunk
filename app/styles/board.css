@@ -190,3 +190,13 @@ tbody tr:has(.pf-hold) td { padding-block: 14px; }
 .toolbar .sort:hover { border-color: var(--line-2); }
 .toolbar .sort:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .toolbar .search { height: 40px; }
+
+/* keyboard */
+.skip { position: fixed; left: 12px; top: -60px; z-index: 100; padding: 10px 16px; border-radius: 10px; background: var(--fg); color: var(--bg); font: 700 14px var(--font-archivo), sans-serif; text-decoration: none; transition: top var(--fast); }
+.skip:focus { top: 12px; outline: 2px solid var(--accent); outline-offset: 2px; }
+#content { outline: none; display: block; height: 0; }
+.input:focus-within { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+
+/* buttons the repo strips with "all: unset" (copy chips) keep a visible keyboard ring */
+.chip button:focus-visible { outline: 2px solid var(--accent) !important; outline-offset: 3px !important; border-radius: 4px; }
+.bd-row:focus-visible, .bd-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

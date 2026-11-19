@@ -31,9 +31,12 @@ pnpm test && pnpm exec tsc --noEmit
 - `tsc --noEmit` clean; 59 tests pass (49 existing + 10 new in `lib/board.test.ts`).
 - Home, Room, Make, You loaded in headless Chrome at 1440 and 390 px, dark and light, 0 console errors and 0 page errors, against live testnet (2 open boxes) and against a fixture of 6 boxes (bidding, reveal, opening, failed, open) fed through a mocked `list_boxes`/`get_box`.
 
+- Keyboard pass (2026-11-19): tabbed Home, Room, Make and You with a script. Fixed: duplicate tape links in the tab order, no skip link, copy buttons with no focus ring, board rows wrongly marked as list items, unnamed coin links on You. Focus rings and names re-checked after the fix.
+
 ## Not checked
 - Bidding, claiming, creating a box, or swapping with a connected wallet.
-- Keyboard and focus order on the new pages.
+- Screen reader output (only the keyboard path was tested, by script).
+- The 7 px wide explorer arrow link next to copy chips is below a comfortable target size; not changed.
 - 3D Peek frame rate on a real GPU (headless numbers were unreliable). It loads three.js after first paint and falls back to the flat Peek without WebGL.
 - A true Reveal-state screenshot (my fixture landed in Opening).
 - Launches and Bids tabs on You; the Coin page chart and swap panels were not restyled.

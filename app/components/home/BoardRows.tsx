@@ -35,13 +35,13 @@ function PriceCell({ box, state, spot }: { box: LaunchBox; state: BoxState; spot
 /** Every box as a row of the board: coin, state, a flip clock, bidders, and a price that is sealed until the box opens. */
 export function BoardRows({ boxes, nowNs, spots }: { boxes: LaunchBox[]; nowNs: number; spots: Record<number, number> }) {
   return (
-    <div className="bd-rows" role="list">
+    <div className="bd-rows">
       <div className="bd-head" aria-hidden="true"><span>Coin</span><span>Time</span><span>Bidders</span><span>Price</span></div>
       {boxes.map((b) => {
         const state = stateOf(b, nowNs);
         const ticker = b.meta.ticker.toUpperCase();
         return (
-          <Link key={b.id} href={`/box/${b.id}`} className="bd-row" data-state={state} role="listitem">
+          <Link key={b.id} href={`/box/${b.id}`} className="bd-row" data-state={state}>
             <span className="bd-coin">
               <Coin image={b.meta.image} ticker={ticker} size={52} square />
               <span className="bd-name"><b>{b.meta.name} <small>${ticker}</small></b><small className="mono">dev {b.dev}</small><span className="chip status" data-state={state}>{STATE_LABEL[state]}</span></span>
