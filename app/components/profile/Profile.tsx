@@ -2,9 +2,12 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { Coin, CoinStack } from '@/components/board/Coin';
+import { Tiles } from '@/components/board/Flap';
 import { BoxCard, STATE_LABEL } from '@/components/home/BoxCard';
 import { explorerAccount } from '@/config';
 import { type Profile as ProfileData, useProfile } from '@/hooks/useProfile';
+import { stackCount } from '@/lib/board';
 import { messageOf } from '@/lib/errors';
 import { formatCoinsM, formatNear, pricePerMillion } from '@/lib/format';
 import { tgas } from '@/lib/gas';
@@ -28,13 +31,18 @@ function ProfileHead({ account, p, mine }: { account: string; p: ProfileData; mi
         <div className="avatar">{account.slice(0, 2).toUpperCase()}</div>
         <div>
           <h1 style={{ wordBreak: 'break-all' }}>{account}{mine && <span className="tk">you</span>}</h1>
+          {p.loaded && p.holdings.length > 0 && (
+            <div className="pf-coins" aria-label={`${p.holdings.length} coins held`}>
+              {p.holdings.slice(0, 7).map((h) => <Link key={h.box.id} href={`/box/${h.box.id}`} title={h.box.meta.name}><Coin image={h.box.meta.image} ticker={h.box.meta.ticker.toUpperCase()} size={34} /></Link>)}
+            </div>
+          )}
           <div className="chips">
             <span className="chip"><button type="button" onClick={copy} style={{ all: 'unset', cursor: 'pointer' }}>Copy id</button></span>
             <span className="chip"><a href={explorerAccount(account)} target="_blank" rel="noreferrer">Explorer ↗</a></span>
           </div>
         </div>
         <div className="big">
-          <div className="n">{p.loaded ? `${formatNear(t.portfolio, 2)} Ⓝ` : '…'}</div>
+          <div className="n">{p.loaded ? <Tiles text={formatNear(t.portfolio, 2)} label={`${formatNear(t.portfolio, 2)} NEAR`} /> : '…'}</div>
           <div className="d">portfolio at spot</div>
         </div>
       </div>
@@ -72,7 +80,12 @@ function HoldingRow({ h, mine, busy, onClaim }: { h: Holding; mine: boolean; bus
   const hasRewards = BigInt(h.rewards.near) > 0n || BigInt(h.rewards.coin) > 0n;
   return (
     <tr>
-      <td><Link className="link" href={`/box/${h.box.id}`}>{h.box.meta.name} <span style={{ color: 'var(--muted)' }}>${ticker}</span></Link></td>
+      <td>
+        <Link className="pf-hold" href={`/box/${h.box.id}`}>
+          <CoinStack image={h.box.meta.image} ticker={ticker} discs={stackCount(supplyBps(h.balance) / 10_000)} size={34} />
+          <span>{h.box.meta.name} <small>${ticker}</small></span>
+        </Link>
+      </td>
       <td className="r">{formatCoinsM(h.balance)}M <small style={{ color: 'var(--muted)' }}>{(supplyBps(h.balance) / 100).toFixed(2)}%</small></td>
       <td className="r">{h.reserves ? pricePerM(h.reserves).toFixed(4) : '—'}</td>
       <td className="r">{formatNear(holdingValue(h.balance, h.reserves), 3)} Ⓝ</td>

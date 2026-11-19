@@ -13,6 +13,7 @@ import { OpeningPanel } from '@/components/box/OpeningPanel';
 import { RevealPanel } from '@/components/box/RevealPanel';
 import { Tabs } from '@/components/box/Tabs';
 import { launchpadId } from '@/config';
+import { meterSegments } from '@/lib/board';
 import { useActivity } from '@/hooks/useActivity';
 import { useBox } from '@/hooks/useBox';
 import { useConfig } from '@/hooks/useConfig';
@@ -41,14 +42,13 @@ function claimActions(box: LaunchBox, bids: Bid[], state: BoxState, coinMin: str
 function Progress({ box, state }: { box: LaunchBox; state: BoxState }) {
   const total = toNumber(box.total_in);
   const min = toNumber(box.min_raise);
-  const scale = Math.max(min * 10, total * 1.1, 1);
+  const { lit, marker } = meterSegments(total, min);
   const label = total >= min ? `${fmt(total / min, 1)}× minimum` : `${fmt((total / min) * 100, 0)}% of minimum`;
   return (
     <div className="prog">
       <div className="row"><span>{state === 'open' ? 'Final raise' : 'Raise progress'}</span><b>{label}</b></div>
-      <div className="bar">
-        <i style={{ '--v': Math.min(1, total / scale) } as React.CSSProperties} />
-        <span className="min" style={{ '--m': min / scale } as React.CSSProperties} title="Minimum" />
+      <div className="bd-meter room" role="img" aria-label={label}>
+        {Array.from({ length: 22 }, (_, k) => <i key={k} className={`${k < lit ? 'on' : ''}${k === marker ? ' min' : ''}`} />)}
       </div>
       <div className="row"><span>In: <b>{formatNear(box.total_in, 1)} Ⓝ</b></span><span>Min: <b>{formatNear(box.min_raise, 1)} Ⓝ</b></span></div>
     </div>
@@ -138,7 +138,7 @@ export function BoxView({ id }: { id: number }) {
               <SwapPanel box={box} config={config} reserves={pool.reserves} onTraded={refresh} />
             </section>
           )}
-          <section className="card pad">
+          <section className="card pad bidcard">
             <Progress box={box} state={state} />
             <div style={{ marginTop: 14 }}>
               {state === 'bidding' && <BidPanel box={box} nowNs={nowNs} onPlaced={refresh} />}
