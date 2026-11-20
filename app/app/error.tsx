@@ -1,5 +1,6 @@
 'use client';
 
+import { Tiles } from '@/components/board/Flap';
 import { Peek } from '@/components/Peek';
 import { messageOf } from '@/lib/errors';
 
@@ -7,7 +8,8 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
   return (
     <div className="gutter in" style={{ paddingBlock: 64 }}>
       <div className="card pad" style={{ maxWidth: 520, margin: '0 auto', textAlign: 'center', display: 'grid', gap: 12, justifyItems: 'center' }}>
-        <Peek state="failed" size={64} />
+        <Peek state="failed" size={72} />
+        <Tiles text="OOPS" label="Something went wrong" className="nf-tiles" />
         <h1 style={{ margin: 0, fontSize: 22 }}>Something went wrong on this page.</h1>
         <p className="fine" style={{ margin: 0 }}>{messageOf(error)}</p>
         <button className="cta" type="button" onClick={reset} style={{ width: 'auto', padding: '0 24px' }}>Try again</button>
