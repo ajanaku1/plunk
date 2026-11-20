@@ -7,7 +7,7 @@ import { PeekBox } from '@/components/board/PeekBox';
 import { openingStep } from '@/components/box/Banner';
 import { STATE_LABEL } from '@/components/home/BoxCard';
 import { Peek } from '@/components/Peek';
-import { meterSegments } from '@/lib/board';
+import { meterSegments, priceText } from '@/lib/board';
 import { clock, formatNear, pricePerMillion, toNumber } from '@/lib/format';
 import { type BoxState, type LaunchBox, revealEnd, stateOf } from '@/lib/launchpad';
 
@@ -31,7 +31,7 @@ function clockText(box: LaunchBox, state: BoxState, nowNs: number): string {
   if (state === 'bidding') return clock((box.close_at - nowNs) / 1e9);
   if (state === 'reveal') return clock((revealEnd(box) - nowNs) / 1e9);
   if (state === 'opening') return `${openingStep(box)}/4`;
-  return box.opening ? pricePerMillion(box.opening.price).toFixed(4) : '0.0000';
+  return box.opening ? priceText(pricePerMillion(box.opening.price)) : '0.0000';
 }
 
 function caption(state: BoxState): string {

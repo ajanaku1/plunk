@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { createContext, createElement, type PropsWithChildren, type ReactElement, useContext, useEffect, useState } from 'react';
 import { useBoxes } from '@/hooks/useBoxes';
 import { useConfig } from '@/hooks/useConfig';
+import { priceText } from '@/lib/board';
 import { clock, pricePerMillion } from '@/lib/format';
 import { type BoxState, type LaunchBox, revealEnd, stateOf } from '@/lib/launchpad';
 import { type PoolInfo, pricePerM, reservesOf } from '@/lib/pool';
@@ -23,10 +24,10 @@ function liveText(box: LaunchBox, state: BoxState, nowNs: number): string {
 function openItem(box: LaunchBox, spot: number | undefined): TapeItem {
   const ticker = box.meta.ticker.toUpperCase();
   const clearing = box.opening ? pricePerMillion(box.opening.price) : 0;
-  if (!spot || !clearing) return { id: box.id, ticker, state: 'open', text: `${clearing.toFixed(4)} Ⓝ`, tone: 'muted' };
+  if (!spot || !clearing) return { id: box.id, ticker, state: 'open', text: `${priceText(clearing)} Ⓝ`, tone: 'muted' };
   const move = ((spot - clearing) / clearing) * 100;
   const sign = move >= 0 ? '+' : '';
-  return { id: box.id, ticker, state: 'open', text: `${spot.toFixed(4)} Ⓝ ${sign}${move.toFixed(1)}%`, tone: move >= 0 ? 'up' : 'down', spot };
+  return { id: box.id, ticker, state: 'open', text: `${priceText(spot)} Ⓝ ${sign}${move.toFixed(1)}%`, tone: move >= 0 ? 'up' : 'down', spot };
 }
 
 /** Spot price per 1M coins for each open box, polled every 15 s. */
@@ -62,8 +63,8 @@ function useSpots(open: LaunchBox[], exchange: string | undefined): Record<numbe
   return spots;
 }
 
-/** The ticker tape across the top of every page: live rooms with their countdown, open coins with spot and move since the clearing price. */
-export function useTape(): TapeItem[] {
+/** Builds the tape items. Runs the spot poll, so it is called once, by `TapeProvider`. */
+function useTapeItems(): TapeItem[] {
   const { boxes, nowNs } = useBoxes();
   const { config } = useConfig();
   const recent = boxes.slice(0, MAX_ITEMS);
@@ -75,4 +76,16 @@ export function useTape(): TapeItem[] {
     const tone = state === 'failed' ? 'muted' : 'live';
     return { id: b.id, ticker: b.meta.ticker.toUpperCase(), state, text: liveText(b, state, nowNs), tone };
   });
+}
+
+const TapeContext = createContext<TapeItem[]>([]);
+
+/** Holds the one tape (and its one spot poll) that the top marquee and Home both read. */
+export function TapeProvider({ children }: PropsWithChildren): ReactElement {
+  return createElement(TapeContext.Provider, { value: useTapeItems() }, children);
+}
+
+/** The ticker tape across the top of every page: live rooms with their countdown, open coins with spot and move since the clearing price. */
+export function useTape(): TapeItem[] {
+  return useContext(TapeContext);
 }

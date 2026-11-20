@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { ActivityRail } from '@/components/home/ActivityRail';
 import { BoardRows } from '@/components/home/BoardRows';
 import { Hero } from '@/components/home/Hero';
-import { OpenedGrid } from '@/components/home/OpenedGrid';
+import { justOpened, OpenedGrid } from '@/components/home/OpenedGrid';
 import { HowItWorks, matchesQuery, type Sort, SORT_LABEL, SORTS, sortBoxes, StatsStrip } from '@/components/home/HomeExtras';
 import { launchpadId } from '@/config';
 import { useBoxes } from '@/hooks/useBoxes';
@@ -30,6 +30,9 @@ export function Home() {
   const spots: Record<number, number> = {};
   for (const it of tape) if (it.spot) spots[it.id] = it.spot;
   const shown = sortBoxes(boxes.filter((b) => matches(filter, stateOf(b, nowNs)) && matchesQuery(b, query)), sort, nowNs);
+  // "Just opened" is a feature of the unfiltered board; its coins then leave the rows so nothing shows twice.
+  const featured = filter === 'all' && !query ? justOpened(boxes) : [];
+  const rows = shown.filter((b) => !featured.includes(b));
   return (
     <>
       <Hero boxes={boxes} nowNs={nowNs} loaded={loaded} />
@@ -51,8 +54,8 @@ export function Home() {
           {error && <p className="err">Could not list boxes: {error}</p>}
           {loaded && !error && boxes.length === 0 && <div className="notice">Nothing yet. The first box is yours to make.</div>}
           {loaded && boxes.length > 0 && shown.length === 0 && <div className="notice">{query ? `Nothing matches “${query}”.` : `No ${filter} boxes right now.`}</div>}
-          {shown.length > 0 && <BoardRows boxes={shown} nowNs={nowNs} spots={spots} />}
-          <OpenedGrid boxes={boxes} nowNs={nowNs} spots={spots} />
+          {rows.length > 0 && <BoardRows boxes={rows} nowNs={nowNs} spots={spots} />}
+          <OpenedGrid boxes={boxes} open={featured} nowNs={nowNs} spots={spots} />
           {loaded && boxes.length < 6 && <HowItWorks />}
         </div>
         <aside className="bd-rail">

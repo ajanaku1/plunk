@@ -34,3 +34,9 @@ export function tickerHue(ticker: string): number {
   for (const c of ticker) h = (h * 31 + c.charCodeAt(0)) % 360;
   return h;
 }
+
+/** A price per 1M coins as text: 4 decimals, or two significant digits when that would read as zero. */
+export function priceText(n: number): string {
+  if (!(n > 0) || n >= 0.0001) return (n > 0 ? n : 0).toFixed(4);
+  return n.toFixed(Math.min(20, Math.ceil(-Math.log10(n)) + 1));
+}

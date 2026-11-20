@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import type { PropsWithChildren } from 'react';
+import { TapeProvider } from '@/hooks/useTape';
 import { BoxesProvider } from '@/providers/boxes';
 import { ToastProvider } from '@/providers/toast';
 
@@ -12,7 +13,9 @@ export function Providers({ children }: PropsWithChildren) {
   return (
     <ToastProvider>
       <NearProvider>
-        <BoxesProvider>{children}</BoxesProvider>
+        <BoxesProvider>
+          <TapeProvider>{children}</TapeProvider>
+        </BoxesProvider>
       </NearProvider>
     </ToastProvider>
   );

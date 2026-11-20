@@ -5,7 +5,7 @@ import { Coin } from '@/components/board/Coin';
 import { SealedPrice, Tiles } from '@/components/board/Flap';
 import { openingStep } from '@/components/box/Banner';
 import { STATE_LABEL } from '@/components/home/BoxCard';
-import { ageLabel, changeVsClose } from '@/lib/board';
+import { ageLabel, changeVsClose, priceText } from '@/lib/board';
 import { clock, pricePerMillion } from '@/lib/format';
 import { type BoxState, type LaunchBox, revealEnd, stateOf } from '@/lib/launchpad';
 
@@ -24,7 +24,7 @@ function PriceCell({ box, state, spot }: { box: LaunchBox; state: BoxState; spot
     return (
       <>
         {move && <span className="bd-chg" data-tone={move.tone}>{move.label}</span>}
-        <Tiles text={(spot || clearing).toFixed(4)} />
+        <Tiles text={priceText(spot || clearing)} />
       </>
     );
   }

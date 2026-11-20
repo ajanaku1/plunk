@@ -6,6 +6,7 @@ import { Coin } from '@/components/board/Coin';
 import { SealedPrice, Tiles } from '@/components/board/Flap';
 import { explorerAccount } from '@/config';
 import { pct } from '@/lib/fees';
+import { priceText } from '@/lib/board';
 import { clock, formatNear, nsToDate, pricePerMillion } from '@/lib/format';
 import type { BoxState, LaunchBox } from '@/lib/launchpad';
 import { useToast } from '@/providers/toast';
@@ -38,7 +39,7 @@ function Headline({ box, state }: { box: LaunchBox; state: BoxState }) {
   if (state === 'open' && box.opening) {
     return (
       <>
-        <div className="n"><Tiles text={pricePerMillion(box.opening.price).toFixed(4)} /></div>
+        <div className="n"><Tiles text={priceText(pricePerMillion(box.opening.price))} /></div>
         <div className="d up">per 1M ${box.meta.ticker.toUpperCase()} · the one price</div>
       </>
     );

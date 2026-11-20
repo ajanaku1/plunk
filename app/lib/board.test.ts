@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ageLabel, changeVsClose, meterSegments, stackCount, tickerHue } from '@/lib/board';
+import { ageLabel, changeVsClose, meterSegments, priceText, stackCount, tickerHue } from '@/lib/board';
 
 const NS = 1e9;
 
@@ -55,5 +55,17 @@ describe('tickerHue', () => {
     expect(tickerHue('fon')).toBe(tickerHue('fon'));
     expect(tickerHue('peek')).toBeGreaterThanOrEqual(0);
     expect(tickerHue('peek')).toBeLessThan(360);
+  });
+});
+
+describe('priceText', () => {
+  it('keeps 4 decimals for ordinary prices and zero', () => {
+    expect(priceText(0.4)).toBe('0.4000');
+    expect(priceText(0.0001)).toBe('0.0001');
+    expect(priceText(0)).toBe('0.0000');
+  });
+  it('shows two significant digits instead of 0.0000 for tiny prices', () => {
+    expect(priceText(0.000034)).toBe('0.000034');
+    expect(priceText(0.00000051)).toBe('0.00000051');
   });
 });

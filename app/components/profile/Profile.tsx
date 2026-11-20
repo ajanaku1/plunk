@@ -7,7 +7,7 @@ import { Tiles } from '@/components/board/Flap';
 import { BoxCard, STATE_LABEL } from '@/components/home/BoxCard';
 import { explorerAccount } from '@/config';
 import { type Profile as ProfileData, useProfile } from '@/hooks/useProfile';
-import { stackCount } from '@/lib/board';
+import { priceText, stackCount } from '@/lib/board';
 import { messageOf } from '@/lib/errors';
 import { formatCoinsM, formatNear, pricePerMillion } from '@/lib/format';
 import { tgas } from '@/lib/gas';
@@ -87,7 +87,7 @@ function HoldingRow({ h, mine, busy, onClaim }: { h: Holding; mine: boolean; bus
         </Link>
       </td>
       <td className="r">{formatCoinsM(h.balance)}M <small style={{ color: 'var(--muted)' }}>{(supplyBps(h.balance) / 100).toFixed(2)}%</small></td>
-      <td className="r">{h.reserves ? pricePerM(h.reserves).toFixed(4) : '—'}</td>
+      <td className="r">{h.reserves ? priceText(pricePerM(h.reserves)) : '—'}</td>
       <td className="r">{formatNear(holdingValue(h.balance, h.reserves), 3)} Ⓝ</td>
       <td className="r">{formatNear(h.rewards.near, 4)} Ⓝ{BigInt(h.rewards.coin) > 0n && ` + ${formatCoinsM(h.rewards.coin)}M`}</td>
       <td className="r">{mine && hasRewards && <button className="chip" type="button" disabled={busy} onClick={onClaim}>{busy ? 'Signing…' : 'Claim'}</button>}</td>
