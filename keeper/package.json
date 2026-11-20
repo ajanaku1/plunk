@@ -9,7 +9,8 @@
   "scripts": {
     "harvest": "node harvest.ts",
     "reveal": "node reveal.ts",
-    "test": "node --test sealed.test.ts",
+    "watch": "node watch.ts",
+    "test": "node --test sealed.test.ts health.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

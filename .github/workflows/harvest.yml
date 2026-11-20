@@ -30,3 +30,9 @@ jobs:
           LAUNCHPAD_ID: ${{ vars.LAUNCHPAD_ID }}
           KEEPER_ACCOUNT: ${{ secrets.KEEPER_ACCOUNT }}
           KEEPER_KEY: ${{ secrets.KEEPER_KEY }}
+      # Fails the run (GitHub then emails the repo owner) when a box needs a person. Runs even if harvest failed.
+      - if: always()
+        run: pnpm watch
+        env:
+          NEAR_NETWORK: ${{ vars.NEAR_NETWORK }}
+          LAUNCHPAD_ID: ${{ vars.LAUNCHPAD_ID }}
