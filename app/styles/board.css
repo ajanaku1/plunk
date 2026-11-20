@@ -200,3 +200,5 @@ tbody tr:has(.pf-hold) td { padding-block: 14px; }
 /* buttons the repo strips with "all: unset" (copy chips) keep a visible keyboard ring */
 .chip button:focus-visible { outline: 2px solid var(--accent) !important; outline-offset: 3px !important; border-radius: 4px; }
 .bd-row:focus-visible, .bd-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.ident .d .amt { font: 900 18px var(--font-display); letter-spacing: -.02em; color: var(--fg); margin-right: 2px; }

@@ -7,7 +7,7 @@ import { type BoxState, type LaunchBox, revealEnd, stateOf } from '@/lib/launchp
 
 export const STATE_LABEL: Record<BoxState, string> = { bidding: 'Bidding', reveal: 'Reveal', opening: 'Opening', open: 'Open', failed: 'Failed' };
 
-export function Headline({ box, state, nowNs }: { box: LaunchBox; state: BoxState; nowNs: number }) {
+function Headline({ box, state, nowNs }: { box: LaunchBox; state: BoxState; nowNs: number }) {
   if (state === 'open' && box.opening) return <b>{pricePerMillion(box.opening.price).toFixed(3)} Ⓝ <small>per 1M</small></b>;
   if (state === 'bidding') return <b>{clock((box.close_at - nowNs) / 1e9)} <small>to close</small></b>;
   if (state === 'reveal') return <b>{clock((revealEnd(box) - nowNs) / 1e9)} <small>to open</small></b>;

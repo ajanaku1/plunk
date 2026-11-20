@@ -55,7 +55,7 @@ function Headline({ box, state }: { box: LaunchBox; state: BoxState }) {
   return (
     <>
       <div className="n"><SealedPrice /></div>
-      <div className="d">price sealed · {formatNear(box.total_in, 1)} Ⓝ in the box · {box.bidder_count} {box.bidder_count === 1 ? 'bidder' : 'bidders'}</div>
+      <div className="d"><b className="amt">{formatNear(box.total_in, 1)} Ⓝ</b> in the box · {box.bidder_count} {box.bidder_count === 1 ? 'bidder' : 'bidders'} · price sealed</div>
     </>
   );
 }
