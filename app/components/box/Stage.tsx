@@ -9,12 +9,13 @@ import { STATE_LABEL, priceText } from '@/lib/board';
 import { clock, formatNear, pricePerMillion } from '@/lib/format';
 import { type BoxState, type LaunchBox, revealEnd } from '@/lib/launchpad';
 import type { Stage as Scene } from '@/lib/stage3d';
-import { FLIP_FROM, OPENING_T, REST_T, stageTime } from '@/lib/stagemap';
+import { FLIP_FROM, REST_T, stageTime } from '@/lib/stagemap';
 import { TOTAL, captionAt, priceAt } from '@/lib/timeline';
 
 type Mode = { kind: 'live' } | { kind: 'flip'; start: number } | { kind: 'film'; start: number; from: number } | { kind: 'scrub'; t: number };
 
 const FLYERS = 14;
+const STEP_LABEL = ['Clearing bids', 'Minting the coin', 'Creating the pool', 'Adding liquidity'];
 
 function hasWebgl(): boolean {
   try {
@@ -37,11 +38,12 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }:
   const priceRef = useRef<HTMLDivElement>(null);
   const api = useRef<Scene | null>(null);
   const mode = useRef<Mode>({ kind: 'live' });
-  const input = useRef({ state, closeAt: box.close_at });
-  input.current = { state, closeAt: box.close_at };
+  const input = useRef({ state, closeAt: box.close_at, step: openingStep(box) });
+  input.current = { state, closeAt: box.close_at, step: openingStep(box) };
   const prevState = useRef<BoxState>(state);
   const prevBids = useRef(box.bid_count);
   const collapsedRef = useRef(false);
+  const openingSince = useRef(nowNs);
   const reduceRef = useRef(false);
   const [t, setT] = useState(() => stageTime({ state, nowNs, closeAt: box.close_at }));
   const [gl, setGl] = useState(true);
@@ -86,7 +88,7 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }:
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => api.current?.resize(), 120);
     });
-    ro.observe(host);
+    ro.observe(el);
     void import('@/lib/stage3d')
       .then(async ({ createStage }) => {
         const s = await createStage({ canvas: el, image: box.meta.image || undefined, ticker: box.meta.ticker, bidders: box.bidder_count });
@@ -132,9 +134,9 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }:
             tt = m.t;
             scripted = true;
           } else {
-            const { state: st, closeAt } = input.current;
-            tt = stageTime({ state: st, nowNs: Date.now() * 1e6, closeAt });
-            if (st === 'opening' && !reduce) tt = OPENING_T + 0.04 * Math.sin(wall * 2.2);
+            const { state: st, closeAt, step } = input.current;
+            tt = stageTime({ state: st, nowNs: Date.now() * 1e6, closeAt, step });
+            if (st === 'opening' && !reduce) tt += 0.04 * Math.sin(wall * 2.2);
           }
           tt = Math.min(tt, TOTAL - 0.01);
           s.render(tt, wall, scripted);
@@ -162,6 +164,14 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }:
     // the scene is built once per stage; live values come in through refs
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (state === 'opening') openingSince.current = Date.now() * 1e6;
+  }, [state, box.phase]);
+  // the strip only belongs to an open box
+  useEffect(() => {
+    if (state !== 'open' && collapsedRef.current) setCollapsed(false);
+  }, [state]);
 
   // each real bid arcs into the box; the moment the box opens while you watch, the lid swings and the coins spill
   useEffect(() => {
@@ -238,15 +248,20 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }:
   const target = state === 'bidding' ? box.close_at : revealEnd(box);
   const left = Math.max(0, Math.ceil((target - nowNs) / 1e9));
   const step = openingStep(box);
-  const showFilm = !collapsed && (mode.current.kind === 'film' || mode.current.kind === 'scrub' || mode.current.kind === 'flip');
+  // 'opening' also covers a box whose reveal is over but that nobody has opened yet; only phase Opening is the chain working
+  const working = box.phase === 'Opening';
+  const waited = Math.max(0, Math.floor((nowNs - openingSince.current) / 1e9));
+  const waitText = `${Math.floor(waited / 60)}:${String(waited % 60).padStart(2, '0')}`;
+  const isCollapsed = collapsed && state === 'open';
+  const showFilm = !isCollapsed && (mode.current.kind === 'film' || mode.current.kind === 'scrub' || mode.current.kind === 'flip');
   const price = priceAt(final, t);
   const filmPrice = showFilm && state === 'open' && price.visible && !price.done;
   const shownPrice = filmPrice ? price.text : final;
 
   return (
-    <section ref={wrap} className={`stage${cinema ? ' cinema' : ''}${collapsed ? ' collapsed' : ''}`} data-state={state} aria-label={`${box.meta.name} box, ${STATE_LABEL[state]}`}>
-      <canvas ref={canvas} className="stage-gl" style={{ opacity: ready && !collapsed ? 1 : 0 }} aria-hidden="true" />
-      {(!gl || (!ready && !collapsed)) && <div className="stage-flat" aria-hidden="true"><Peek state={state} size={140} /></div>}
+    <section ref={wrap} className={`stage${cinema ? ' cinema' : ''}${isCollapsed ? ' collapsed' : ''}`} data-state={state} aria-label={`${box.meta.name} box, ${STATE_LABEL[state]}`}>
+      <canvas ref={canvas} className="stage-gl" style={{ opacity: ready && !isCollapsed ? 1 : 0 }} aria-hidden="true" />
+      {(!gl || (!ready && !isCollapsed)) && <div className="stage-flat" aria-hidden="true"><Peek state={state} size={140} /></div>}
       {!cinema && (
         <div className="stage-who">
           <Coin image={box.meta.image || undefined} ticker={ticker} size={44} square />
@@ -266,7 +281,7 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }:
             <small>opening, step {step} of 4</small>
           </>
         )}
-        {state === 'open' && (collapsed || !showFilm || price.visible) && (
+        {state === 'open' && (isCollapsed || !showFilm || price.visible) && (
           <>
             <Tiles text={shownPrice} label={`${final} NEAR per 1M`} className={filmPrice ? undefined : 'lk'} />
             <small>{filmPrice ? 'The price, unlocking' : 'NEAR per 1M. Everyone paid this.'}</small>
@@ -277,13 +292,14 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }:
         {showFilm && state === 'open' ? (
           <p className="cap" aria-live="off">{captionAt(t)}</p>
         ) : (
-          <p className="cap"><b>{head}</b> <span>{rest}</span></p>
+          <p className="cap"><b>{head}</b> <span>{state === 'opening' ? (working ? `Step ${step} of 4: ${STEP_LABEL[step - 1]}. Each step is a transaction on the chain.` : 'The reveal is over. Anyone can open the box from the Opening panel; it then takes a few transactions.') : rest}</span></p>
         )}
-        {state !== 'failed' && <p className="nums mono">{box.bid_count} {box.bid_count === 1 ? 'bid' : 'bids'} · {box.bidder_count} {box.bidder_count === 1 ? 'bidder' : 'bidders'} · {formatNear(box.total_in, 1)} Ⓝ in the box</p>}
+        {state === 'opening' && !showFilm && (working ? <p className="nums mono working">working on the chain · {waitText}</p> : <p className="nums mono">waiting for someone to open it</p>)}
+        {state !== 'failed' && state !== 'opening' && <p className="nums mono">{box.bid_count} {box.bid_count === 1 ? 'bid' : 'bids'} · {box.bidder_count} {box.bidder_count === 1 ? 'bidder' : 'bidders'} · {formatNear(box.total_in, 1)} Ⓝ in the box</p>}
       </div>
       {state === 'open' && !cinema && (
         <div className="stage-ctl">
-          {collapsed ? (
+          {isCollapsed ? (
             <button type="button" onClick={expand}>Watch the opening</button>
           ) : (
             <>

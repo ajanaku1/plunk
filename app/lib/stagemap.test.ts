@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { poseAt } from '@/lib/timeline';
-import { FLIP_FROM, OPENING_T, REST_T, stageTime } from '@/lib/stagemap';
+import { FLIP_FROM, OPENING_T, REST_T, openingTime, stageTime } from '@/lib/stagemap';
 
 const closeAt = 1_000e9;
 const at = (secAfterClose: number) => stageTime({ state: 'reveal', nowNs: closeAt + secAfterClose * 1e9, closeAt });
@@ -26,10 +26,16 @@ describe('stageTime', () => {
     expect(poseAt(at(2)).lid).toBeCloseTo(0, 2);
   });
   it('holds the shut box, unopened, while the chain opens it', () => {
-    const t = stageTime({ state: 'opening', nowNs: 0, closeAt });
-    expect(t).toBe(OPENING_T);
+    const t = stageTime({ state: 'opening', nowNs: 0, closeAt, step: 1 });
+    expect(t).toBeCloseTo(OPENING_T - 0.075, 5);
     expect(poseAt(t).crack).toBe(0);
     expect(poseAt(t).leak).toBeGreaterThan(0.5);
+  });
+  it('lifts the light with each real opening step and never reaches the crack', () => {
+    const ts = [1, 2, 3, 4].map((s) => openingTime(s));
+    expect(ts).toEqual([...ts].sort((a, b) => a - b));
+    expect(Math.max(...ts)).toBeLessThan(11.75);
+    expect(poseAt(ts[3]!).leak).toBeGreaterThan(poseAt(ts[0]!).leak);
   });
   it('rests on the open frame, and the live flip starts before the crack', () => {
     expect(stageTime({ state: 'open', nowNs: 0, closeAt })).toBe(REST_T);
