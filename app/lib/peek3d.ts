@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { slab, studio } from '@/lib/peekmesh';
 
 /**
  * Peek in 3D, built from the brand mark (brand/marks/peek.svg): a smooth green body, a dark band, an overhanging lid that floats just above it
@@ -13,53 +14,6 @@ const INK = '#1b1626';
 const GREY = '#6f6a80';
 const BODY_H = 0.314;
 const CZ = 0.009;
-
-function roundedRect(w: number, d: number, r: number): THREE.Shape {
-  const s = new THREE.Shape();
-  const x = -w / 2;
-  const y = -d / 2;
-  s.moveTo(x + r, y);
-  s.lineTo(x + w - r, y);
-  s.quadraticCurveTo(x + w, y, x + w, y + r);
-  s.lineTo(x + w, y + d - r);
-  s.quadraticCurveTo(x + w, y + d, x + w - r, y + d);
-  s.lineTo(x + r, y + d);
-  s.quadraticCurveTo(x, y + d, x, y + d - r);
-  s.lineTo(x, y + r);
-  s.quadraticCurveTo(x, y, x + r, y);
-  return s;
-}
-
-function slab(w: number, d: number, h: number, r: number, bevel: number): THREE.ExtrudeGeometry {
-  const g = new THREE.ExtrudeGeometry(roundedRect(w - 2 * bevel, d - 2 * bevel, r), { depth: h - 2 * bevel, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 8, curveSegments: 20 });
-  g.translate(0, 0, bevel);
-  g.rotateX(-Math.PI / 2);
-  return g;
-}
-
-/** A tiny studio baked into an environment map, so the clear coat has something to reflect without downloading a light map. */
-function studio(renderer: THREE.WebGLRenderer): THREE.Texture {
-  const env = new THREE.Scene();
-  env.background = new THREE.Color('#14101c');
-  const panel = (w: number, h: number, x: number, y: number, z: number, color: THREE.Color, rx: number, ry: number) => {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide }));
-    m.position.set(x, y, z);
-    m.rotation.set(rx, ry, 0);
-    env.add(m);
-  };
-  panel(6, 3, 0, 5, 0, new THREE.Color(6, 6, 6), Math.PI / 2, 0);
-  panel(3, 5, -4, 1, 1, new THREE.Color(3, 3.2, 3.4), 0, Math.PI / 2);
-  panel(3, 5, 4, 1, -1, new THREE.Color(1.2, 0.8, 3), 0, -Math.PI / 2);
-  const pm = new THREE.PMREMGenerator(renderer);
-  const tex = pm.fromScene(env).texture;
-  pm.dispose();
-  env.traverse((o) => {
-    const m = o as THREE.Mesh;
-    m.geometry?.dispose();
-    (m.material as THREE.Material | undefined)?.dispose();
-  });
-  return tex;
-}
 
 export function mountPeek(host: HTMLElement, initial: PeekState, opts: { follow?: boolean } = {}): PeekController {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;

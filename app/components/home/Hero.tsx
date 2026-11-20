@@ -5,9 +5,8 @@ import { Coin } from '@/components/board/Coin';
 import { SealedPrice, Tiles } from '@/components/board/Flap';
 import { PeekBox } from '@/components/board/PeekBox';
 import { openingStep } from '@/components/box/Banner';
-import { STATE_LABEL } from '@/components/home/BoxCard';
 import { Peek } from '@/components/Peek';
-import { meterSegments, priceText } from '@/lib/board';
+import { meterSegments, priceText, STATE_LABEL } from '@/lib/board';
 import { clock, formatNear, pricePerMillion, toNumber } from '@/lib/format';
 import { type BoxState, type LaunchBox, revealEnd, stateOf } from '@/lib/launchpad';
 
@@ -79,7 +78,7 @@ export function Hero({ boxes, nowNs, loaded }: { boxes: LaunchBox[]; nowNs: numb
     <section className="bd-hero gutter" data-state={state}>
       <div className="in">
         <div className="bd-panel">
-          <div className="bd-peek"><PeekBox state={state} size={190} pulse={box.bidder_count} /></div>
+          <div className="bd-peek"><PeekBox state={state} size={190} pulse={box.bid_count} /></div>
           <div className="bd-left">
             <div className="bd-who">
               <Link href={`/box/${box.id}`} aria-label={`${box.meta.name} box`}><Coin image={box.meta.image} ticker={ticker} size={104} square /></Link>

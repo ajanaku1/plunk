@@ -1,13 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityChart } from '@/components/box/ActivityChart';
-import { Banner } from '@/components/box/Banner';
 import { BidPanel } from '@/components/box/BidPanel';
 import { ClaimsPanel, claimable } from '@/components/box/ClaimsPanel';
 import { DevPanel } from '@/components/box/DevPanel';
 import { Identity } from '@/components/box/Identity';
+import { Stage } from '@/components/box/Stage';
 import { TaxCard } from '@/components/box/TaxCard';
 import { OpeningPanel } from '@/components/box/OpeningPanel';
 import { RevealPanel } from '@/components/box/RevealPanel';
@@ -25,7 +25,7 @@ import { SwapPanel } from '@/components/terminal/SwapPanel';
 import { TradesFeed } from '@/components/terminal/TradesFeed';
 import { messageOf } from '@/lib/errors';
 import { txLink } from '@/lib/txlink';
-import { fmt, formatNear, toNumber } from '@/lib/format';
+import { fmt, formatCoinsM, formatNear, toNumber } from '@/lib/format';
 import { tgas } from '@/lib/gas';
 import { useStorageMin } from '@/hooks/useStorageMin';
 import { type Bid, type BoxState, type LaunchBox, stateOf } from '@/lib/launchpad';
@@ -79,6 +79,11 @@ export function BoxView({ id }: { id: number }) {
   const { notify } = useToast();
   const [busy, setBusy] = useState(false);
   const [claimError, setClaimError] = useState('');
+  const [cinema, setCinema] = useState<{ t: number } | null>(null);
+  useEffect(() => {
+    const q = new URLSearchParams(location.search);
+    if (q.get('cinema') === '1') setCinema({ t: Math.max(0, Number(q.get('t')) || 0) });
+  }, []);
 
   if (box === undefined) {
     return error ? (
@@ -96,6 +101,7 @@ export function BoxView({ id }: { id: number }) {
     );
   }
   const state = stateOf(box, nowNs);
+  if (cinema && state === 'open') return <Stage box={box} state={state} nowNs={nowNs} cinema startT={cinema.t} onExit={() => setCinema(null)} />;
 
   const claim = async (only?: Bid) => {
     const actions = claimActions(box, only ? [only] : bids, state, coinMin);
@@ -115,9 +121,14 @@ export function BoxView({ id }: { id: number }) {
 
   const chartNote = state === 'failed' ? 'No pool was created.' : 'Totals only. Prices do not exist until the box clears.';
   const ticker = box.meta.ticker.toUpperCase();
+  // what you received, only for a bidder in an open box (the dev's fill goes to escrow)
+  const got = accountId && accountId !== box.dev ? bids.reduce((a, b) => a + BigInt(b.tokens), 0n) : 0n;
+  const mine = state === 'open' && got > 0n ? `${formatCoinsM(got)}M` : undefined;
+  // a bidder whose every bid was turned away (max price under the final price): coins 0, money back
+  const missed = state === 'open' && !!accountId && accountId !== box.dev && bids.length > 0 && got === 0n && bids.some((b) => BigInt(b.refund) > 0n);
   return (
     <>
-      <Banner box={box} state={state} nowNs={nowNs} />
+      <Stage box={box} state={state} nowNs={nowNs} onStep={refresh} mine={mine} missed={missed} />
       <div className="page gutter in">
         <main className="main">
           <Identity box={box} state={state} nowNs={nowNs} />
@@ -134,7 +145,7 @@ export function BoxView({ id }: { id: number }) {
         </main>
         <aside className="side">
           {state === 'open' && config && (
-            <section className="card pad">
+            <section className="card pad swapcard">
               <SwapPanel box={box} config={config} reserves={pool.reserves} onTraded={refresh} />
             </section>
           )}

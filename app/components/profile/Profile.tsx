@@ -4,10 +4,10 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { Coin, CoinStack } from '@/components/board/Coin';
 import { Tiles } from '@/components/board/Flap';
-import { BoxCard, STATE_LABEL } from '@/components/home/BoxCard';
+import { BoardRows } from '@/components/home/BoardRows';
 import { explorerAccount } from '@/config';
 import { type Profile as ProfileData, useProfile } from '@/hooks/useProfile';
-import { priceText, stackCount } from '@/lib/board';
+import { priceText, STATE_LABEL, stackCount } from '@/lib/board';
 import { messageOf } from '@/lib/errors';
 import { formatCoinsM, formatNear, pricePerMillion } from '@/lib/format';
 import { tgas } from '@/lib/gas';
@@ -160,7 +160,7 @@ export function Profile({ account }: { account: string }) {
           {p.loaded && tab === 'launches' && (
             p.launches.length === 0
               ? <div className="notice">No launches yet. {mine && <Link className="link" href="/make">Make a box →</Link>}</div>
-              : <div className="grid" style={{ padding: 16 }}>{p.launches.map((b) => <BoxCard key={b.id} box={b} nowNs={p.nowNs} />)}</div>
+              : <BoardRows boxes={p.launches} nowNs={p.nowNs} spots={{}} />
           )}
         </div>
       </section>
