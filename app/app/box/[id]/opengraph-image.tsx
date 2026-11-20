@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { ImageResponse } from 'next/og';
 import { launchpadId, networkId, rpcUrls } from '@/config';
 import { artUri } from '@/lib/artdata';
@@ -10,6 +12,25 @@ export const alt = 'A Plunk box: sealed bids, one clearing price';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 export const revalidate = 60;
+
+const font = (file: string) => readFile(join(process.cwd(), 'assets', 'fonts', file));
+
+function Tiles({ text, h }: { text: string; h: number }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center' }}>
+      {[...text].map((c, i) =>
+        /[0-9A-Za-z]/.test(c) ? (
+          <div key={i} style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: h * 0.7, height: h, marginRight: 6, borderRadius: h * 0.1, background: '#2E2640', color: '#F4F1FA', fontSize: h * 0.82, fontWeight: 900 }}>
+            {c}
+            <div style={{ position: 'absolute', left: 0, right: 0, top: h / 2 - 1, height: 2, background: '#0A0710' }} />
+          </div>
+        ) : (
+          <div key={i} style={{ display: 'flex', width: h * 0.3, justifyContent: 'center', color: '#F4F1FA', fontSize: h * 0.82, fontWeight: 900, marginRight: 6 }}>{c}</div>
+        ),
+      )}
+    </div>
+  );
+}
 
 const TONE = { live: '#9B6BFF', open: '#2EE89C', failed: '#FF5C7A' } as const;
 
@@ -35,9 +56,13 @@ export default async function BoxCardImage({ params }: { params: Promise<{ id: s
   const ticker = box.meta.ticker.toUpperCase();
   const art = box.meta.image ? await artUri(box.meta.image) : null;
   const tone = TONE[copy.tone];
+  const fonts = [
+    { name: 'Archivo', data: await font('archivo-800.woff'), weight: 800 as const, style: 'normal' as const },
+    { name: 'Archivo', data: await font('archivo-900.woff'), weight: 900 as const, style: 'normal' as const },
+  ];
   return new ImageResponse(
     (
-      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 56, background: ink, color: '#F4F1FA', fontFamily: 'sans-serif' }}>
+      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 56, background: ink, color: '#F4F1FA', fontFamily: 'Archivo' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{ width: 48, height: 48, borderRadius: 12, background: '#2EE89C', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -55,11 +80,14 @@ export default async function BoxCardImage({ params }: { params: Promise<{ id: s
             <div style={{ width: 300, height: 300, borderRadius: 40, border: '6px solid #2A2338', background: `hsl(${tickerHue(ticker)}, 45%, 28%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 130, fontWeight: 800 }}>{ticker.slice(0, 2)}</div>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
-            <div style={{ display: 'flex', fontSize: box.meta.name.length > 14 ? 64 : 84, fontWeight: 800, lineHeight: 1, letterSpacing: -2 }}>{box.meta.name}</div>
+            <div style={{ display: 'flex', fontSize: box.meta.name.length > 14 ? 68 : 92, fontWeight: 900, lineHeight: 1, letterSpacing: -3 }}>{box.meta.name}</div>
             <div style={{ display: 'flex', fontSize: 32, color: '#A79FBA' }}>${ticker}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 22 }}>
               <div style={{ display: 'flex', fontSize: 24, color: '#A79FBA', letterSpacing: 2 }}>{copy.label.toUpperCase()}</div>
-              <div style={{ display: 'flex', alignSelf: 'flex-start', padding: '6px 22px', borderRadius: 16, background: '#2E2640', fontSize: 64, fontWeight: 800, letterSpacing: -1 }}>{copy.value}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+                <Tiles text={copy.value} h={96} />
+                <div style={{ display: 'flex', fontSize: 28, fontWeight: 800, color: '#A79FBA', width: 120, lineHeight: 1.1 }}>{copy.unit}</div>
+              </div>
             </div>
           </div>
         </div>
@@ -69,6 +97,6 @@ export default async function BoxCardImage({ params }: { params: Promise<{ id: s
         </div>
       </div>
     ),
-    size,
+    { ...size, fonts },
   );
 }
