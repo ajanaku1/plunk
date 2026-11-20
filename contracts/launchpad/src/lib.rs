@@ -3,6 +3,7 @@ pub mod bids;
 pub mod claims;
 pub mod clearing;
 pub mod escrow;
+pub mod guard;
 pub mod harvest;
 pub mod migrate;
 pub mod open;
@@ -90,6 +91,9 @@ impl Launchpad {
         let fee = self.config.creation_fee.0;
         let deposit = env::attached_deposit().as_yoctonear();
         require!(deposit >= fee, "creation fee required");
+        let guard = guard::load();
+        require!(!guard.paused, "paused: no new boxes");
+        require!(!guard.mirror_off || args.solana_share_bps.unwrap_or(0) == 0, "solana share is switched off");
         validate(&args, self.config.min_raise_floor.0).unwrap_or_else(|e| env::panic_str(e));
         require!(self.tickers.insert(args.meta.ticker.clone()), "ticker taken");
         let dev = env::predecessor_account_id();

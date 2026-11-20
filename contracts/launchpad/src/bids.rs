@@ -122,8 +122,9 @@ fn parse_msg(sender: &AccountId, msg: &str) -> Result<Parsed, AccountId> {
 
 #[near]
 impl FungibleTokenReceiver for Launchpad {
-    /// FR-028: wNEAR is never bounced. Anything that can't become a bid is credited as a late
-    /// deposit to the named recipient (cross-chain) or the sender. Other tokens are returned.
+    /// FR-028: wNEAR is never bounced. Anything that can't become a bid (bad, late, paused, over the
+    /// raise cap) is credited as a late deposit to the named recipient (cross-chain) or the sender.
+    /// Other tokens are returned.
     fn ft_on_transfer(&mut self, sender_id: AccountId, amount: U128, msg: String) -> PromiseOrValue<U128> {
         if env::predecessor_account_id() != self.config.wnear {
             return PromiseOrValue::Value(amount);
@@ -196,9 +197,11 @@ impl Launchpad {
 impl Launchpad {
     fn place_bid(&mut self, sender: &AccountId, amount: u128, p: Parsed) -> Result<(), AccountId> {
         let reject = || p.recipient.clone();
+        let guard = crate::guard::load();
         let b = self.boxes.get_mut(&p.box_id).ok_or_else(reject)?;
         let open = b.phase == Phase::Bidding && env::block_timestamp() < b.close_at;
-        if !open || b.bid_count as usize >= MAX_BIDS {
+        let over_cap = guard.max_raise.0 > 0 && b.total_in.0 + amount > guard.max_raise.0;
+        if !open || guard.paused || over_cap || b.bid_count as usize >= MAX_BIDS {
             return Err(reject());
         }
         let id = b.bid_count;
