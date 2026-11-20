@@ -124,9 +124,11 @@ export function BoxView({ id }: { id: number }) {
   // what you received, only for a bidder in an open box (the dev's fill goes to escrow)
   const got = accountId && accountId !== box.dev ? bids.reduce((a, b) => a + BigInt(b.tokens), 0n) : 0n;
   const mine = state === 'open' && got > 0n ? `${formatCoinsM(got)}M` : undefined;
+  // a bidder whose every bid was turned away (max price under the final price): coins 0, money back
+  const missed = state === 'open' && !!accountId && accountId !== box.dev && bids.length > 0 && got === 0n && bids.some((b) => BigInt(b.refund) > 0n);
   return (
     <>
-      <Stage box={box} state={state} nowNs={nowNs} onStep={refresh} mine={mine} />
+      <Stage box={box} state={state} nowNs={nowNs} onStep={refresh} mine={mine} missed={missed} />
       <div className="page gutter in">
         <main className="main">
           <Identity box={box} state={state} nowNs={nowNs} />

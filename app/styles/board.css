@@ -280,10 +280,13 @@ tbody tr:has(.pf-hold) td { padding-block: 14px; }
 .flyer { position: absolute; left: 0; top: 0; margin: -15px 0 0 -15px; pointer-events: none; opacity: 0; z-index: 5; will-change: transform; }
 .stage-clock[data-hit] .tiles { transition: filter .12s, transform .12s; }
 .stage-clock .mine { display: inline-block; margin-left: 10px; padding: 3px 9px; border-radius: 99px; background: #2ce6a622; color: #5df2c0; font-weight: 700; letter-spacing: .04em; }
+.stage-clock .mine.miss { background: #f5b04a22; color: #f5c46b; }
 .stage-clock[data-hit]:not([data-hit="0"]) .mine { animation: hit .22s ease-out; }
 .stage-clock[data-hit]:not([data-hit="0"]) .tiles { animation: hit .22s ease-out; }
 @keyframes hit { 0% { transform: scale(1); filter: brightness(1); } 40% { transform: scale(1.05); filter: brightness(1.5); } 100% { transform: scale(1); filter: brightness(1); } }
 @media (max-width: 760px) {
+  .stage-clock small { max-width: calc(100vw - 28px); text-align: right; }
+  .stage-clock .mine { display: table; margin: 6px 0 0 auto; }
   .stage.collapsed { height: 150px; }
   .stage.collapsed .stage-who { top: 12px; }
   .stage.collapsed .stage-clock { right: 14px; top: 12px; }

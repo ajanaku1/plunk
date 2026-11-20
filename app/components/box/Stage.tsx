@@ -33,7 +33,7 @@ function hasWebgl(): boolean {
  * coins travel across to form the price. Latecomers get the compact strip with a Watch button that opens the stage again. Only real numbers are shown.
  * `cinema` fills the screen and plays the film from `startT` for screen recording, with no close-out.
  */
-export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit, onStep, mine }: { box: LaunchBox; state: BoxState; nowNs: number; cinema?: boolean; startT?: number; onExit?: () => void; onStep?: () => Promise<void>; mine?: string }) {
+export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit, onStep, mine, missed }: { box: LaunchBox; state: BoxState; nowNs: number; cinema?: boolean; startT?: number; onExit?: () => void; onStep?: () => Promise<void>; mine?: string; missed?: boolean }) {
   const opener = useOpenBox(box, onStep ?? (async () => {}));
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -295,6 +295,7 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit, o
             <small>
               {filmPrice ? 'The price, unlocking' : 'NEAR per 1M. Everyone paid this.'}
               {mine && !filmPrice && <b ref={mineRef} className="mine">You got {mine} ${ticker}</b>}
+              {missed && !mine && !filmPrice && <b className="mine miss">Your bid didn&apos;t clear. Claim your refund.</b>}
             </small>
           </>
         )}
