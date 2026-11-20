@@ -5,6 +5,7 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { tickerHue } from '@/lib/board';
+import { BID_KINDS, bidCoinTextures } from '@/lib/bidcoins';
 import { createPeek, studio } from '@/lib/peekmesh';
 import { COINS_AT, SEAL_CRACK, SEAL_ON, poseAt } from '@/lib/timeline';
 
@@ -208,16 +209,17 @@ export async function createStage(opts: StageOptions): Promise<Stage> {
     return m;
   });
 
-  // orbs: each bid is a glowing thing that arcs into the gap
+  // each bid is a coin of the currency it came in (NEAR, Solana, USDC) that arcs into the gap
   const glow = glowTexture();
+  const bidTex = bidCoinTextures();
   let seed = 11;
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const norb = Math.max(8, Math.min(MAX_ORBS, opts.bidders || MAX_ORBS));
   const orbs = Array.from({ length: norb }, (_, i) => {
     const a = rnd() * Math.PI * 2;
     const r = 1.8 + rnd() * 0.9;
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow, color: i % 7 === 0 ? 0xc9b3ff : 0x9b6bff, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
-    sp.scale.setScalar(0.22);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: bidTex[BID_KINDS[(i * 2 + (i >> 2)) % 3]!], transparent: true, depthWrite: false }));
+    sp.scale.setScalar(0.17);
     scene.add(sp);
     return { sp, from: new THREE.Vector3(Math.cos(a) * r, 0.5 + rnd() * 1.1, Math.sin(a) * r * 0.7 + 0.5), t0: 0.7 + i * (5.2 / norb), dur: 0.95 };
   });
@@ -232,7 +234,7 @@ export async function createStage(opts: StageOptions): Promise<Stage> {
 
   // live orbs: one per real bid, fired by the page
   const liveOrbs = Array.from({ length: 14 }, () => {
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow, color: 0x9b6bff, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: bidTex.near, transparent: true, depthWrite: false }));
     sp.visible = false;
     scene.add(sp);
     return { sp, from: new THREE.Vector3(), born: -1 };
@@ -243,6 +245,7 @@ export async function createStage(opts: StageOptions): Promise<Stage> {
     const a = Math.random() * Math.PI * 2;
     o.from.set(Math.cos(a) * 2.2, 0.6 + Math.random() * 1.0, Math.sin(a) * 1.6 + 0.5);
     o.born = wall;
+    o.sp.material.map = bidTex[BID_KINDS[Math.floor(Math.random() * 3)]!];
   };
 
   // coins: real discs with the token's art, real physics
@@ -375,8 +378,8 @@ export async function createStage(opts: StageOptions): Promise<Stage> {
       const c = o.from.clone().lerp(mouth, 0.5);
       c.y += 0.9;
       o.sp.position.copy(bez(o.from, c, mouth, eo(k)));
-      o.sp.scale.setScalar(0.22 * (1 - 0.65 * k) + 0.06);
-      o.sp.material.opacity = 1 - Math.max(0, (k - 0.85) / 0.15);
+      o.sp.scale.setScalar(0.17 * (1 - 0.82 * k) + 0.03);
+      o.sp.material.opacity = 1 - Math.max(0, (k - 0.7) / 0.3);
     });
     liveOrbs.forEach((o) => {
       const k = o.born < 0 ? -1 : (wall - o.born) / 0.95;
@@ -388,8 +391,8 @@ export async function createStage(opts: StageOptions): Promise<Stage> {
       const c = o.from.clone().lerp(mouth, 0.5);
       c.y += 0.9;
       o.sp.position.copy(bez(o.from, c, mouth, eo(k)));
-      o.sp.scale.setScalar(0.22 * (1 - 0.65 * k) + 0.06);
-      o.sp.material.opacity = 1 - Math.max(0, (k - 0.85) / 0.15);
+      o.sp.scale.setScalar(0.17 * (1 - 0.82 * k) + 0.03);
+      o.sp.material.opacity = 1 - Math.max(0, (k - 0.7) / 0.3);
     });
     refunds.forEach((r) => {
       const k = scripted ? (t - r.t0) / 3.2 : -1;
@@ -422,7 +425,7 @@ export async function createStage(opts: StageOptions): Promise<Stage> {
         const mat = m.material as THREE.Material | THREE.Material[] | undefined;
         (Array.isArray(mat) ? mat : mat ? [mat] : []).forEach((x) => x.dispose());
       });
-      [art, glow, env].forEach((x) => x.dispose());
+      [art, glow, env, ...Object.values(bidTex)].forEach((x) => x.dispose());
       target.dispose();
       composer.dispose();
       renderer.dispose();
