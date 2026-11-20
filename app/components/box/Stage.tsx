@@ -14,6 +14,8 @@ import { TOTAL, captionAt, priceAt } from '@/lib/timeline';
 
 type Mode = { kind: 'live' } | { kind: 'flip'; start: number } | { kind: 'film'; start: number; from: number } | { kind: 'scrub'; t: number };
 
+const FLYERS = 14;
+
 function hasWebgl(): boolean {
   try {
     const c = document.createElement('canvas');
@@ -25,22 +27,35 @@ function hasWebgl(): boolean {
 
 /**
  * The top of the Room: a stage showing the box as it really is. Bidding: the lid sits ajar and each real bid arcs in. Reveal: shut, sealed, trembling for the
- * real 60 s. Opening: held just before the crack. The moment it opens while you watch, the lid swings and the coins spill. Latecomers land on the open frame
- * and can scrub or replay the whole film in place. Only real numbers are shown. `cinema` fills the screen and plays the film from `startT` for screen recording.
+ * real 60 s. Opening: held just before the crack. The moment it opens while you watch, the lid swings and the coins spill; then the stage closes up and the
+ * coins travel across to form the price. Latecomers get the compact strip with a Watch button that opens the stage again. Only real numbers are shown.
+ * `cinema` fills the screen and plays the film from `startT` for screen recording, with no close-out.
  */
 export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }: { box: LaunchBox; state: BoxState; nowNs: number; cinema?: boolean; startT?: number; onExit?: () => void }) {
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
+  const priceRef = useRef<HTMLDivElement>(null);
   const api = useRef<Scene | null>(null);
   const mode = useRef<Mode>({ kind: 'live' });
   const input = useRef({ state, closeAt: box.close_at });
   input.current = { state, closeAt: box.close_at };
   const prevState = useRef<BoxState>(state);
   const prevBids = useRef(box.bid_count);
+  const collapsedRef = useRef(false);
+  const reduceRef = useRef(false);
   const [t, setT] = useState(() => stageTime({ state, nowNs, closeAt: box.close_at }));
   const [gl, setGl] = useState(true);
   const [ready, setReady] = useState(false);
   const [scrubbing, setScrubbing] = useState(false);
+  // an open box that was already open when you arrived starts as the compact strip
+  const [collapsed, setCollapsedState] = useState(!cinema && state === 'open');
+  const [flyers, setFlyers] = useState(0);
+  const [hit, setHit] = useState(0);
+  const setCollapsed = (v: boolean) => {
+    collapsedRef.current = v;
+    setCollapsedState(v);
+  };
+  collapsedRef.current = collapsed;
   const ticker = box.meta.ticker.toUpperCase();
   const final = priceText(pricePerMillion(box.opening?.price ?? '0'));
 
@@ -48,21 +63,29 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }:
     const el = canvas.current;
     const host = wrap.current;
     if (!el || !host) return;
+    reduceRef.current = matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!hasWebgl()) {
       setGl(false);
       return;
     }
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduce = reduceRef.current;
     let off = false;
     let raf = 0;
     let visible = true;
     let lastSet = 0;
     let firstDrawn = false;
+    let slow = 0;
+    let lastFrame = 0;
+    let resizeTimer: ReturnType<typeof setTimeout> | undefined;
     const io = new IntersectionObserver(([e]) => {
       visible = !!e?.isIntersecting;
     });
     io.observe(host);
-    const ro = new ResizeObserver(() => api.current?.resize());
+    // the stage animates its own height; resize the scene once it settles, not on every step
+    const ro = new ResizeObserver(() => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => api.current?.resize(), 120);
+    });
     ro.observe(host);
     void import('@/lib/stage3d')
       .then(async ({ createStage }) => {
@@ -74,7 +97,20 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }:
         const frame = (now: number) => {
           if (off) return;
           raf = requestAnimationFrame(frame);
-          if (!visible || document.hidden) return;
+          if (!visible || document.hidden || (collapsedRef.current && mode.current.kind === 'live')) {
+            lastFrame = 0;
+            return;
+          }
+          // if frames run slow for a stretch, drop the pixel ratio once
+          if (lastFrame) {
+            const dt = now - lastFrame;
+            slow = dt > 40 ? slow + 1 : Math.max(0, slow - 1);
+            if (slow > 45) {
+              s.setQuality(1);
+              slow = -9999;
+            }
+          }
+          lastFrame = now;
           const wall = now / 1000;
           const m = mode.current;
           let tt: number;
@@ -82,10 +118,16 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }:
           if (m.kind === 'film') {
             tt = m.from + (wall - m.start);
             scripted = true;
-            if (tt >= TOTAL) mode.current = { kind: 'live' };
+            if (tt >= TOTAL) {
+              mode.current = { kind: 'live' };
+              if (!cinema) closeOut();
+            }
           } else if (m.kind === 'flip') {
             tt = FLIP_FROM + (wall - m.start);
-            if (tt >= REST_T) mode.current = { kind: 'live' };
+            if (tt >= REST_T) {
+              mode.current = { kind: 'live' };
+              closeOut();
+            }
           } else if (m.kind === 'scrub') {
             tt = m.t;
             scripted = true;
@@ -111,6 +153,7 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }:
     return () => {
       off = true;
       cancelAnimationFrame(raf);
+      clearTimeout(resizeTimer);
       io.disconnect();
       ro.disconnect();
       api.current?.dispose();
@@ -129,8 +172,9 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }:
   useEffect(() => {
     const before = prevState.current;
     prevState.current = state;
-    if (before !== 'open' && before !== 'failed' && state === 'open' && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      mode.current = { kind: 'flip', start: performance.now() / 1000 };
+    if (before !== 'open' && before !== 'failed' && state === 'open') {
+      if (reduceRef.current) setCollapsed(!cinema);
+      else mode.current = { kind: 'flip', start: performance.now() / 1000 };
       setScrubbing(false);
     }
   }, [state]);
@@ -143,7 +187,49 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }:
     return () => removeEventListener('keydown', key);
   }, [cinema, onExit]);
 
-  const playing = mode.current.kind === 'film' || mode.current.kind === 'flip' || scrubbing;
+  // the close-out: the stage closes up while the box's coins travel across and land on the price
+  function closeOut() {
+    const host = wrap.current;
+    const price = priceRef.current;
+    if (!host || !price) return setCollapsed(true);
+    setScrubbing(false);
+    setFlyers(FLYERS);
+    setCollapsed(true);
+    const hr = host.getBoundingClientRect();
+    const pr = price.getBoundingClientRect();
+    // where the price will sit in the collapsed strip: its right edge stays CLOSED_RIGHT from the stage's right edge
+    const endX = hr.width - 200 - pr.width / 2;
+    const endY = 14 + pr.height / 2;
+    requestAnimationFrame(() => {
+      const els = host.querySelectorAll<HTMLElement>('.flyer');
+      els.forEach((el, i) => {
+        const sx = hr.width * (0.38 + Math.random() * 0.24);
+        const sy = hr.height * (0.6 + Math.random() * 0.12);
+        const mx = (sx + endX) / 2 + (Math.random() - 0.5) * 120;
+        const my = Math.min(sy, endY) - 70 - Math.random() * 60;
+        const a = el.animate(
+          [
+            { transform: `translate(${sx}px, ${sy}px) scale(1.1)`, opacity: 0 },
+            { transform: `translate(${sx}px, ${sy - 14}px) scale(1.1)`, opacity: 1, offset: 0.12 },
+            { transform: `translate(${mx}px, ${my}px) scale(1)`, opacity: 1, offset: 0.55 },
+            { transform: `translate(${endX}px, ${endY}px) scale(0.45)`, opacity: 1, offset: 0.95 },
+            { transform: `translate(${endX}px, ${endY}px) scale(0.2)`, opacity: 0 },
+          ],
+          { duration: 1000, delay: 250 + i * 70, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'both' },
+        );
+        a.onfinish = () => {
+          setHit((h) => h + 1);
+          if (i === els.length - 1) setTimeout(() => setFlyers(0), 120);
+        };
+      });
+    });
+  }
+
+  const expand = () => {
+    setCollapsed(false);
+    setScrubbing(false);
+    mode.current = { kind: 'film', start: performance.now() / 1000, from: 0 };
+  };
   const replay = () => {
     setScrubbing(false);
     mode.current = { kind: 'film', start: performance.now() / 1000, from: 0 };
@@ -152,22 +238,22 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }:
   const target = state === 'bidding' ? box.close_at : revealEnd(box);
   const left = Math.max(0, Math.ceil((target - nowNs) / 1e9));
   const step = openingStep(box);
-  const showFilm = mode.current.kind === 'film' || mode.current.kind === 'scrub' || mode.current.kind === 'flip';
+  const showFilm = !collapsed && (mode.current.kind === 'film' || mode.current.kind === 'scrub' || mode.current.kind === 'flip');
   const price = priceAt(final, t);
   const filmPrice = showFilm && state === 'open' && price.visible && !price.done;
   const shownPrice = filmPrice ? price.text : final;
 
   return (
-    <section ref={wrap} className={`stage${cinema ? ' cinema' : ''}`} data-state={state} aria-label={`${box.meta.name} box, ${STATE_LABEL[state]}`}>
-      <canvas ref={canvas} className="stage-gl" style={{ opacity: ready ? 1 : 0 }} aria-hidden="true" />
-      {(!gl || !ready) && <div className="stage-flat" aria-hidden="true"><Peek state={state} size={140} /></div>}
+    <section ref={wrap} className={`stage${cinema ? ' cinema' : ''}${collapsed ? ' collapsed' : ''}`} data-state={state} aria-label={`${box.meta.name} box, ${STATE_LABEL[state]}`}>
+      <canvas ref={canvas} className="stage-gl" style={{ opacity: ready && !collapsed ? 1 : 0 }} aria-hidden="true" />
+      {(!gl || (!ready && !collapsed)) && <div className="stage-flat" aria-hidden="true"><Peek state={state} size={140} /></div>}
       {!cinema && (
         <div className="stage-who">
           <Coin image={box.meta.image || undefined} ticker={ticker} size={44} square />
           <div><b>{box.meta.name} <small>${ticker}</small></b><span className="chip status" data-state={state}>{STATE_LABEL[state]}</span></div>
         </div>
       )}
-      <div className="stage-clock">
+      <div ref={priceRef} className="stage-clock" data-hit={hit}>
         {(state === 'bidding' || state === 'reveal') && !showFilm && (
           <>
             <span role="timer"><Tiles text={clock(left)} label={`${clock(left)} ${state === 'bidding' ? 'to close' : 'to open'}`} /></span>
@@ -180,7 +266,7 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }:
             <small>opening, step {step} of 4</small>
           </>
         )}
-        {(state === 'open' || (showFilm && price.visible)) && state === 'open' && (
+        {state === 'open' && (collapsed || !showFilm || price.visible) && (
           <>
             <Tiles text={shownPrice} label={`${final} NEAR per 1M`} className={filmPrice ? undefined : 'lk'} />
             <small>{filmPrice ? 'The price, unlocking' : 'NEAR per 1M. Everyone paid this.'}</small>
@@ -197,24 +283,33 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }:
       </div>
       {state === 'open' && !cinema && (
         <div className="stage-ctl">
-          <button type="button" onClick={replay} disabled={mode.current.kind === 'film'}>{mode.current.kind === 'film' ? 'Playing…' : 'Replay the opening'}</button>
-          <label className="scrub">
-            <span className="sr">Scrub the opening</span>
-            <input
-              type="range"
-              min={0}
-              max={TOTAL - 0.01}
-              step={0.01}
-              value={mode.current.kind === 'live' && !scrubbing ? REST_T : t}
-              onChange={(e) => {
-                setScrubbing(true);
-                mode.current = { kind: 'scrub', t: Number(e.target.value) };
-              }}
-            />
-          </label>
-          {(scrubbing || playing) && <button type="button" onClick={() => { setScrubbing(false); mode.current = { kind: 'live' }; }}>Back to now</button>}
+          {collapsed ? (
+            <button type="button" onClick={expand}>Watch the opening</button>
+          ) : (
+            <>
+              <button type="button" onClick={replay}>Replay</button>
+              <label className="scrub">
+                <span className="sr">Scrub the opening</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={TOTAL - 0.01}
+                  step={0.01}
+                  value={mode.current.kind === 'live' && !scrubbing ? REST_T : t}
+                  onChange={(e) => {
+                    setScrubbing(true);
+                    mode.current = { kind: 'scrub', t: Number(e.target.value) };
+                  }}
+                />
+              </label>
+              <button type="button" onClick={() => { mode.current = { kind: 'live' }; closeOut(); }}>Close</button>
+            </>
+          )}
         </div>
       )}
+      {Array.from({ length: flyers }, (_, i) => (
+        <span key={i} className="flyer" aria-hidden="true"><Coin image={box.meta.image || undefined} ticker={ticker} size={30} /></span>
+      ))}
       {cinema && <p className="stage-hint">Esc to leave</p>}
     </section>
   );

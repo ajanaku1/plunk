@@ -225,14 +225,14 @@ tbody tr:has(.pf-hold) td { padding-block: 14px; }
 
 
 /* ---------- the stage ---------- */
-.stage { position: relative; width: 100%; height: clamp(300px, 42vw, 560px); background: #0e0b14; color: #f3f0fa; overflow: hidden; border-bottom: 1px solid var(--line); }
-.stage-gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; transition: opacity .5s var(--ease); }
+.stage { position: relative; width: 100%; height: clamp(340px, 40vw, 600px); background: #0e0b14; color: #f3f0fa; overflow: hidden; border-bottom: 1px solid var(--line); transition: height .85s cubic-bezier(.65, 0, .25, 1); }
+.stage-gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .stage-flat { position: absolute; inset: 0; display: grid; place-items: center; }
-.stage-who { position: absolute; left: 20px; top: 16px; display: flex; align-items: center; gap: 12px; }
+.stage-who { position: absolute; left: 20px; top: 16px; display: flex; align-items: center; gap: 12px; transition: top .85s cubic-bezier(.65, 0, .25, 1); }
 .stage-who b { display: block; font: 900 24px/1 var(--font-display); letter-spacing: -.03em; }
 .stage-who small { font: 500 12px var(--font-mono); color: #a79fba; letter-spacing: 0; }
 .stage-who .chip { margin-top: 6px; }
-.stage-clock { position: absolute; right: 20px; top: 14px; display: grid; justify-items: end; gap: 6px; }
+.stage-clock { position: absolute; right: 20px; top: 14px; display: grid; justify-items: end; gap: 6px; transition: right .85s cubic-bezier(.65, 0, .25, 1); }
 .stage-clock .tiles { font-size: clamp(30px, 4.6vw, 56px); }
 .stage-clock small { font: 500 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: #a79fba; }
 .stage-clock .stepper { min-height: 20px; }
@@ -241,7 +241,7 @@ tbody tr:has(.pf-hold) td { padding-block: 14px; }
 .stage-cap .cap { margin: 0; font: 500 16px/1.35 var(--font-archivo), sans-serif; color: #c9c2d8; }
 .stage-cap .cap b { font: 900 clamp(22px, 3vw, 34px)/1.05 var(--font-display); letter-spacing: -.03em; color: #f3f0fa; display: block; margin-bottom: 4px; }
 .stage-cap .nums { margin: 0; font-size: 12px; color: #a79fba; }
-.stage-ctl { position: absolute; right: 20px; bottom: 16px; display: flex; align-items: center; gap: 10px; }
+.stage-ctl { position: absolute; right: 20px; bottom: 16px; display: flex; align-items: center; gap: 10px; transition: bottom .85s cubic-bezier(.65, 0, .25, 1); }
 .stage-ctl button { height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid #332d3d; background: #15111eE6; color: #f3f0fa; font: 700 13px var(--font-archivo), sans-serif; cursor: pointer; }
 .stage-ctl button:hover:not(:disabled) { border-color: var(--green); }
 .stage-ctl button:focus-visible, .scrub input:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
@@ -264,3 +264,24 @@ tbody tr:has(.pf-hold) td { padding-block: 14px; }
   .scrub input { width: 100%; } .scrub { flex: 1; }
 }
 @media (prefers-reduced-motion: reduce) { .stage-hint { animation: none; } }
+
+/* the close-out: the stage closes up to a strip, the coins land on the price */
+.stage.collapsed { height: 104px; }
+.stage.collapsed .stage-cap { opacity: 0; transition: opacity .3s; }
+.stage.collapsed .stage-who { top: 30px; }
+.stage.collapsed .stage-clock { right: 200px; }
+.stage.collapsed .stage-ctl { bottom: 34px; }
+.stage.collapsed .stage-gl { transition-delay: .1s; }
+.stage-cap { transition: opacity .5s .5s; }
+.stage-gl { transition: opacity .55s var(--ease); }
+.flyer { position: absolute; left: 0; top: 0; margin: -15px 0 0 -15px; pointer-events: none; opacity: 0; z-index: 5; will-change: transform; }
+.stage-clock[data-hit] .tiles { transition: filter .12s, transform .12s; }
+.stage-clock[data-hit]:not([data-hit="0"]) .tiles { animation: hit .22s ease-out; }
+@keyframes hit { 0% { transform: scale(1); filter: brightness(1); } 40% { transform: scale(1.05); filter: brightness(1.5); } 100% { transform: scale(1); filter: brightness(1); } }
+@media (max-width: 760px) {
+  .stage.collapsed { height: 150px; }
+  .stage.collapsed .stage-who { top: 12px; }
+  .stage.collapsed .stage-clock { right: 14px; top: 12px; }
+  .stage.collapsed .stage-ctl { left: 14px; right: 14px; bottom: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .stage, .stage-who, .stage-clock, .stage-ctl { transition: none; } }

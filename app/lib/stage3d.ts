@@ -27,6 +27,8 @@ export type Stage = {
   /** A real bid landed: one orb arcs into the box. */
   fireOrb: (wall: number) => void;
   resize: () => void;
+  /** Pixel ratio, lowered when frames run slow. */
+  setQuality: (ratio: number) => void;
   dispose: () => void;
 };
 
@@ -102,14 +104,17 @@ const bez = (a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3, k: number) =>
 export async function createStage(opts: StageOptions): Promise<Stage> {
   const { canvas } = opts;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+  let pixelRatio = Math.min(devicePixelRatio, 2);
+  renderer.setPixelRatio(pixelRatio);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0e0b14);
   scene.fog = new THREE.Fog(0x0e0b14, 6, 14);
   const cam = new THREE.PerspectiveCamera(32, 1, 0.05, 40);
-  const composer = new EffectComposer(renderer);
+  // post-processing bypasses the canvas's own anti-aliasing, so the render target itself is multisampled
+  const target = new THREE.WebGLRenderTarget(512, 512, { type: THREE.HalfFloatType, samples: 4 });
+  const composer = new EffectComposer(renderer, target);
   composer.addPass(new RenderPass(scene, cam));
   const bloom = new UnrealBloomPass(new THREE.Vector2(512, 512), 0, 0.5, 1.0);
   composer.addPass(bloom);
@@ -123,6 +128,12 @@ export async function createStage(opts: StageOptions): Promise<Stage> {
     cam.updateProjectionMatrix();
   };
   resize();
+  const setQuality = (ratio: number) => {
+    pixelRatio = ratio;
+    renderer.setPixelRatio(ratio);
+    composer.setPixelRatio(ratio);
+    resize();
+  };
 
   const env = studio(renderer);
   scene.environment = env;
@@ -131,7 +142,7 @@ export async function createStage(opts: StageOptions): Promise<Stage> {
   const key = new THREE.SpotLight(0xfff3e0, 2.2 * Math.PI, 16, 0.85, 1, 1);
   key.position.set(-1.4, 3.4, 2.6);
   key.castShadow = true;
-  key.shadow.mapSize.set(1024, 1024);
+  key.shadow.mapSize.set(2048, 2048);
   key.shadow.bias = -0.0004;
   key.shadow.camera.near = 0.5;
   key.shadow.camera.far = 16;
@@ -254,11 +265,11 @@ export async function createStage(opts: StageOptions): Promise<Stage> {
   world.addBody(cb);
 
   const art = await coinTexture(opts.image, opts.ticker);
-  const coinGeo = new THREE.CylinderGeometry(0.075, 0.075, 0.016, 44);
+  const coinGeo = new THREE.CylinderGeometry(0.095, 0.095, 0.02, 48);
   const sideM = new THREE.MeshStandardMaterial({ color: 0x1b1626, roughness: 0.3, metalness: 0.7, envMap: env, envMapIntensity: 1 });
   const faceM = new THREE.MeshStandardMaterial({ map: art, roughness: 0.55, metalness: 0.1, envMap: env, envMapIntensity: 0.3 });
   // cannon's cylinder may lie along Y or Z depending on version; find which and align the mesh to it
-  const probe = new CANNON.Cylinder(0.075, 0.075, 0.016, 16);
+  const probe = new CANNON.Cylinder(0.095, 0.095, 0.02, 16);
   const ext = [0, 1, 2].map((a) => Math.max(...probe.vertices.map((v) => Math.abs([v.x, v.y, v.z][a]!))));
   const thin = ext.indexOf(Math.min(...ext));
   const align = new CANNON.Quaternion(0, 0, 0, 1);
@@ -268,7 +279,7 @@ export async function createStage(opts: StageOptions): Promise<Stage> {
     mesh.castShadow = true;
     mesh.visible = false;
     scene.add(mesh);
-    const body = new CANNON.Body({ mass: 0.05, shape: new CANNON.Cylinder(0.075, 0.075, 0.016, 16), material: cm, sleepSpeedLimit: 0.15, sleepTimeLimit: 0.35, angularDamping: 0.35, linearDamping: 0.22 });
+    const body = new CANNON.Body({ mass: 0.05, shape: new CANNON.Cylinder(0.095, 0.095, 0.02, 16), material: cm, sleepSpeedLimit: 0.15, sleepTimeLimit: 0.35, angularDamping: 0.35, linearDamping: 0.22 });
     return { mesh, body, t0: COINS_AT + i * 0.07, spawned: false };
   });
   const pr = (n: number) => {
@@ -349,7 +360,7 @@ export async function createStage(opts: StageOptions): Promise<Stage> {
       m.position.set(0.2 + Math.cos(ang) * 0.25 * k, 0.31 + 0.5 * k - 1.9 * k * k + 0.05, 0.23 + Math.sin(ang) * 0.12 * k + 0.2 * k);
       m.rotation.set(k * 9, k * 7, k * 5);
     });
-    const pk = cam.aspect < 1.5 ? 1 + (1.5 - cam.aspect) * 0.75 : 1;
+    const pk = cam.aspect < 1.5 ? 1 + (1.5 - cam.aspect) * 0.75 : cam.aspect > 2 ? 0.8 : 1;
     cam.position.set(Math.sin(S.orbit) * S.camD * pk, S.camY * (cam.aspect < 1.5 ? 1.12 : 1), Math.cos(S.orbit) * S.camD * pk);
     cam.lookAt(0, S.camTY, 0);
     orbs.forEach((o) => {
@@ -401,6 +412,7 @@ export async function createStage(opts: StageOptions): Promise<Stage> {
     render,
     fireOrb,
     resize,
+    setQuality,
     dispose: () => {
       scene.traverse((o) => {
         const m = o as THREE.Mesh;
@@ -409,6 +421,7 @@ export async function createStage(opts: StageOptions): Promise<Stage> {
         (Array.isArray(mat) ? mat : mat ? [mat] : []).forEach((x) => x.dispose());
       });
       [art, glow, env].forEach((x) => x.dispose());
+      target.dispose();
       composer.dispose();
       renderer.dispose();
     },
