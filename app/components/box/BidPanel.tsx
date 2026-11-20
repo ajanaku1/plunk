@@ -3,8 +3,10 @@
 import { type FormEvent, useEffect, useState } from 'react';
 import { GAS_RESERVE, useBalance } from '@/hooks/useBalance';
 import { useConfig } from '@/hooks/useConfig';
+import { useGuard } from '@/hooks/useGuard';
 import { bidActions, type BidMsg } from '@/lib/bidTx';
 import { messageOf } from '@/lib/errors';
+import { bidBlock } from '@/lib/guard';
 import { fmt, formatNear, parseNear, parsePricePerMillion, toNumber } from '@/lib/format';
 import type { LaunchBox } from '@/lib/launchpad';
 import { sealBid } from '@/lib/sealed';
@@ -29,6 +31,7 @@ export function BidPanel({ box, nowNs, onPlaced }: BidPanelProps) {
   const [xchain, setXchain] = useState(false);
   const { accountId, signIn, view, batch, lastTx } = useNear();
   const { config, error: configError } = useConfig();
+  const guard = useGuard();
   const { notify } = useToast();
   const bal = useBalance(accountId, box.total_in);
   const [kind, setKind] = useState<Kind>('market');
@@ -42,6 +45,7 @@ export function BidPanel({ box, nowNs, onPlaced }: BidPanelProps) {
   const amountBad = amount === null || amount <= 0n;
   const overBalance = !!accountId && bal !== undefined && amount !== null && amount + GAS_RESERVE > bal;
   const maxBad = kind === 'sealed' && (maxPrice === null || maxPrice <= 0n);
+  const blocked = bidBlock(guard, BigInt(box.total_in), amount);
 
   const useMax = () => {
     if (bal === undefined) return;
@@ -53,7 +57,7 @@ export function BidPanel({ box, nowNs, onPlaced }: BidPanelProps) {
     e.preventDefault();
     setError('');
     if (!accountId) return void signIn().catch((err: unknown) => setError(messageOf(err)));
-    if (!config || amountBad || maxBad || !amount) return;
+    if (!config || amountBad || maxBad || blocked || !amount) return;
     setBusy(true);
     try {
       const msg: BidMsg = kind === 'sealed' && maxPrice ? await sealBid(box.id, accountId, maxPrice, box.close_at) : { box_id: box.id, kind: 'market' };
@@ -106,9 +110,10 @@ export function BidPanel({ box, nowNs, onPlaced }: BidPanelProps) {
         <div><span>Share at today&apos;s totals</span><b>{shareEstimate(amount, box)}</b></div>
         {kind === 'sealed' && <div><span>Your max is</span><b className="pu">encrypted until close</b></div>}
       </div>
-      <button className="cta" type="submit" disabled={busy || (!!accountId && (amountBad || maxBad || overBalance || !config))}>
+      <button className="cta" type="submit" disabled={busy || (!!accountId && (amountBad || maxBad || overBalance || !!blocked || !config))}>
         {!accountId ? 'Connect wallet' : busy ? 'Signing…' : `Plunk ${amountBad ? '' : fmt(toNumber(amount), 2)} NEAR`}
       </button>
+      {blocked && <p className="err">{blocked}</p>}
       {overBalance && <p className="err">That is more than your balance after keeping 0.1 NEAR for gas.</p>}
       {(error || configError) && <p className="err">{error || configError}</p>}
       <p className="fine">

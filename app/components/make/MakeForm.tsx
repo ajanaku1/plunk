@@ -6,6 +6,7 @@ import { Coin } from '@/components/board/Coin';
 import { SealedPrice, Tiles } from '@/components/board/Flap';
 import { launchpadId } from '@/config';
 import { useConfig } from '@/hooks/useConfig';
+import { useGuard } from '@/hooks/useGuard';
 import { type TickerCheck, useTickerTaken } from '@/hooks/useTickerTaken';
 import { IMAGE_TYPES, MAX_BYTES } from '@/app/api/upload/handler';
 import { prepareArt, uploadArt } from '@/lib/image';
@@ -35,7 +36,7 @@ type Draft = {
   split: Split;
 };
 
-const INITIAL: Draft = { name: '', ticker: '', image: '', description: '', roomMin: 5, minRaise: '10', feeBps: 100, taxDays: 1, solanaPct: 30, shared: false, split: ALL_DEV };
+const INITIAL: Draft = { name: '', ticker: '', image: '', description: '', roomMin: 5, minRaise: '10', feeBps: 100, taxDays: 1, solanaPct: 0, shared: false, split: ALL_DEV };
 
 /** Mirrors contracts/launchpad/src/types.rs::validate so the button only enables what the contract accepts. */
 function problems(d: Draft, floor: bigint | undefined, ticker: TickerCheck): string[] {
@@ -179,7 +180,10 @@ export function MakeForm() {
   const [error, setError] = useState('');
   const patch = (p: Partial<Draft>) => setD((prev) => ({ ...prev, ...p }));
   const tickerCheck = useTickerTaken(d.ticker);
+  const guard = useGuard();
   const issues = problems(d, config ? BigInt(config.min_raise_floor) : undefined, tickerCheck);
+  if (guard?.paused) issues.push('Plunk is paused: no new boxes right now.');
+  if (guard?.mirror_off && d.solanaPct > 0) issues.push('The Solana share is switched off for now. Set it to 0.');
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -231,10 +235,12 @@ export function MakeForm() {
             <input id="tax" className="range" type="range" min={1} max={7} step={1} value={d.taxDays} onChange={(e) => patch({ taxDays: Number(e.target.value) })} />
             <p className="hint">Your own sells are taxed 90% → 0% over this window; the tax goes to holders. Buyers see it before they bid.</p>
           </Field>
-          <Field id="sol" label="Solana share of the pool" hint={d.solanaPct === 0 ? 'off' : `${d.solanaPct}%`}>
-            <input id="sol" className="range" type="range" min={0} max={50} step={5} value={d.solanaPct} onChange={(e) => patch({ solanaPct: Number(e.target.value) })} />
-            <p className="hint">At Open this share of the pool&apos;s coins and NEAR is held by the box for the coin&apos;s Solana pool instead of going to Rhea. The rest seeds Rhea as usual.</p>
-          </Field>
+          {!guard?.mirror_off && (
+            <Field id="sol" label="Solana share of the pool" hint={d.solanaPct === 0 ? 'off' : `${d.solanaPct}%`}>
+              <input id="sol" className="range" type="range" min={0} max={50} step={5} value={d.solanaPct} onChange={(e) => patch({ solanaPct: Number(e.target.value) })} />
+              <p className="hint">At Open this share of the pool&apos;s coins and NEAR is held by the box for the coin&apos;s Solana pool instead of going to Rhea. The Solana pool is not live yet: until it is, a held share cannot be sent or returned, so leave this off unless you are testing.</p>
+            </Field>
+          )}
         </section>
 
         <section className="card pad sec">
