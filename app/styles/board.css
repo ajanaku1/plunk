@@ -153,13 +153,16 @@
 
 /* phones: the bid card sits right under the coin, before the chart */
 @media (max-width: 900px) {
-  .page:has(.bidcard) { display: flex; flex-direction: column; }
+  .page:has(.bidcard) { display: flex; flex-direction: column; min-width: 0; width: 100%; max-width: 100%; }
+  .page:has(.bidcard) > .main > *, .page:has(.bidcard) > .side > * { min-width: 0; max-width: 100%; }
   .page:has(.bidcard) > .main, .page:has(.bidcard) > .side { display: contents; }
   .page:has(.bidcard) .identcard { order: 1; }
   .page:has(.bidcard) .bidcard { order: 2; }
   .page:has(.bidcard) .main > :not(.identcard) { order: 3; }
   .page:has(.bidcard) .side > :not(.bidcard) { order: 4; }
   .page:has(.bidcard) .side { position: static; }
+  .page:has(.bidcard) .side > .swapcard { order: 2; }
+  .page:has(.swapcard) .side > .bidcard { order: 3; }
 }
 
 /* ---------- make a box ---------- */

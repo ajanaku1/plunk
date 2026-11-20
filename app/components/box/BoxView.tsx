@@ -135,7 +135,7 @@ export function BoxView({ id }: { id: number }) {
         </main>
         <aside className="side">
           {state === 'open' && config && (
-            <section className="card pad">
+            <section className="card pad swapcard">
               <SwapPanel box={box} config={config} reserves={pool.reserves} onTraded={refresh} />
             </section>
           )}
