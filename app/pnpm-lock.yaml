@@ -13,6 +13,9 @@ importers:
       '@hot-labs/near-connect':
         specifier: 0.11.4
         version: 0.11.4
+      cannon-es:
+        specifier: 0.20.0
+        version: 0.20.0
       lightweight-charts:
         specifier: 5.2.1
         version: 5.2.1
@@ -559,6 +562,9 @@ packages:
 
   caniuse-lite@1.0.30001820:
     resolution: {integrity: sha512-gfWD6MxqVCqAOwmODfZf7DchWvlrA+SRdNX7ceLfg3xRqe5ssjjpF7EgslC/0tiLiNTajdaNN/q8c/5u/7Gz8w==}
+
+  cannon-es@0.20.0:
+    resolution: {integrity: sha512-eZhWTZIkFOnMAJOgfXJa9+b3kVlvG+FX4mdkpePev/w/rP5V8NRquGyEozcjPfEoXUlb+p7d9SUcmDSn14prOA==}
 
   chai@6.3.0:
     resolution: {integrity: sha512-XWAtwJ6OHO+tj0EKCs0Y2UamnyOxseZWltU4x2U2wh8g4AigdjwvtUjvLP2tqkA/avxHEtzxNaqGq/YGNwckKg==}
@@ -1525,6 +1531,8 @@ snapshots:
       get-intrinsic: 1.3.0
 
   caniuse-lite@1.0.30001820: {}
+
+  cannon-es@0.20.0: {}
 
   chai@6.3.0: {}
 

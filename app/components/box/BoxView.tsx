@@ -1,14 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityChart } from '@/components/box/ActivityChart';
-import { Banner } from '@/components/box/Banner';
 import { BidPanel } from '@/components/box/BidPanel';
 import { ClaimsPanel, claimable } from '@/components/box/ClaimsPanel';
 import { DevPanel } from '@/components/box/DevPanel';
 import { Identity } from '@/components/box/Identity';
-import { OpeningBurst } from '@/components/box/OpeningBurst';
+import { Stage } from '@/components/box/Stage';
 import { TaxCard } from '@/components/box/TaxCard';
 import { OpeningPanel } from '@/components/box/OpeningPanel';
 import { RevealPanel } from '@/components/box/RevealPanel';
@@ -80,6 +79,11 @@ export function BoxView({ id }: { id: number }) {
   const { notify } = useToast();
   const [busy, setBusy] = useState(false);
   const [claimError, setClaimError] = useState('');
+  const [cinema, setCinema] = useState<{ t: number } | null>(null);
+  useEffect(() => {
+    const q = new URLSearchParams(location.search);
+    if (q.get('cinema') === '1') setCinema({ t: Math.max(0, Number(q.get('t')) || 0) });
+  }, []);
 
   if (box === undefined) {
     return error ? (
@@ -97,6 +101,7 @@ export function BoxView({ id }: { id: number }) {
     );
   }
   const state = stateOf(box, nowNs);
+  if (cinema && state === 'open') return <Stage box={box} state={state} nowNs={nowNs} cinema startT={cinema.t} onExit={() => setCinema(null)} />;
 
   const claim = async (only?: Bid) => {
     const actions = claimActions(box, only ? [only] : bids, state, coinMin);
@@ -118,7 +123,7 @@ export function BoxView({ id }: { id: number }) {
   const ticker = box.meta.ticker.toUpperCase();
   return (
     <>
-      <Banner box={box} state={state} nowNs={nowNs} extra={<OpeningBurst box={box} state={state} />} />
+      <Stage box={box} state={state} nowNs={nowNs} />
       <div className="page gutter in">
         <main className="main">
           <Identity box={box} state={state} nowNs={nowNs} />
