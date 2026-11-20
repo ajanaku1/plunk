@@ -79,7 +79,7 @@ export function Hero({ boxes, nowNs, loaded }: { boxes: LaunchBox[]; nowNs: numb
     <section className="bd-hero gutter" data-state={state}>
       <div className="in">
         <div className="bd-panel">
-          <div className="bd-peek"><PeekBox state={state} size={190} pulse={box.bidder_count} /></div>
+          <div className="bd-peek"><PeekBox state={state} size={190} pulse={box.bid_count} /></div>
           <div className="bd-left">
             <div className="bd-who">
               <Link href={`/box/${box.id}`} aria-label={`${box.meta.name} box`}><Coin image={box.meta.image} ticker={ticker} size={104} square /></Link>
