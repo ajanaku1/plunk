@@ -2,6 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
+import { Coin } from '@/components/board/Coin';
+import { SealedPrice, Tiles } from '@/components/board/Flap';
 import { launchpadId } from '@/config';
 import { useConfig } from '@/hooks/useConfig';
 import { type TickerCheck, useTickerTaken } from '@/hooks/useTickerTaken';
@@ -76,20 +78,20 @@ function Field({ id, label, hint, children }: { id: string; label: string; hint?
 
 const TICKER_HINT: Partial<Record<TickerCheck, string>> = { checking: 'checking…', free: 'available ✓', taken: 'taken ✗' };
 
-/** How the box card will read on the home page, updated as the dev types. */
+/** The coin as it will sit on the Board, updated as the dev types: the picture as a coin, a sealed price, and the room clock they chose. */
 function Preview({ d }: { d: Draft }) {
-  const [broken, setBroken] = useState('');
   const ticker = (d.ticker || 'tkr').toUpperCase();
-  const showImage = d.image.trim() !== '' && broken !== d.image;
+  const image = d.image.trim();
+  const mm = String(d.roomMin).padStart(2, '0');
   return (
-    <div className="ident" style={{ gridTemplateColumns: '44px minmax(0,1fr)', marginBottom: 12 }}>
-      <div className="avatar" style={{ width: 44, height: 44, borderRadius: 12 }}>
-        {showImage ? <img src={d.image.trim()} alt="" onError={() => setBroken(d.image)} /> : ticker.slice(0, 2)}
+    <div className="mk-preview" aria-label="Preview of your box on the board">
+      <Coin key={image} image={image || undefined} ticker={ticker} size={72} square />
+      <div className="nm">
+        <b>{d.name.trim() || 'Your coin'} <small>${ticker}</small></b>
+        <span className="chip status" data-state="bidding">Bidding</span>
       </div>
-      <div>
-        <h3 style={{ margin: 0, fontSize: 15 }}>{d.name.trim() || 'Your coin'} <span className="tk" style={{ color: 'var(--muted)', fontWeight: 500 }}>${ticker}</span></h3>
-        <div className="hint">{broken && broken === d.image ? 'That image URL did not load; the ticker initials show instead.' : `This is how the box card reads. Image is optional.`}</div>
-      </div>
+      <div className="px"><Tiles text={`${mm}:00`} /><SealedPrice /></div>
+      <p className="hint">This is your row on the board. Bidders see the room clock; the price stays sealed until the box opens. {image ? 'If the picture does not load, the ticker letters show instead.' : 'Add a picture and it becomes your coin.'}</p>
     </div>
   );
 }

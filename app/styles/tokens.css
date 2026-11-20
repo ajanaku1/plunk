@@ -22,6 +22,13 @@
   --accent-fg: #0e0b14;
   --accent-2: var(--purple);
 
+  /* the Board: flip tiles are physical, so they stay dark in both themes */
+  --tile-top: #2e2640;
+  --tile-bottom: #241d33;
+  --tile-edge: #0a0710;
+  --slab: #0a0710; /* the thick edge under panels; softer in light */
+  --tile-fg: #f3f0fa;
+
   /* states */
   --ok: #2ee89c;
   --warn: #ffc24d;
@@ -70,7 +77,8 @@
     --faint: #a39cb8;
     --accent: var(--green-strong);
     --accent-fg: #0e0b14;
-    --ok: var(--green-strong);
+    --ok: #087a4e;
+    --slab: #cfc8e0;
     color-scheme: light;
   }
 }
@@ -86,7 +94,8 @@
   --faint: #a39cb8;
   --accent: var(--green-strong);
   --accent-fg: #0e0b14;
-  --ok: var(--green-strong);
+  --ok: #087a4e;
+  --slab: #cfc8e0;
   color-scheme: light;
 }
 

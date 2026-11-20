@@ -5,8 +5,9 @@ import { Shell } from '@/components/Shell';
 import { Providers } from '@/providers';
 import '@/styles/tokens.css';
 import '@/styles/app.css';
+import '@/styles/board.css';
 
-const archivo = Archivo({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-archivo', display: 'swap' });
+const archivo = Archivo({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800', '900'], variable: '--font-archivo', display: 'swap' });
 const plexMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600'], variable: '--font-plex-mono', display: 'swap' });
 
 export const metadata: Metadata = {

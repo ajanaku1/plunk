@@ -1,4 +1,5 @@
-import { Peek } from '@/components/Peek';
+import { Tiles } from '@/components/board/Flap';
+import { PeekBox } from '@/components/board/PeekBox';
 import { clock } from '@/lib/format';
 import { type BoxState, type LaunchBox, revealEnd } from '@/lib/launchpad';
 
@@ -29,13 +30,13 @@ export function Banner({ box, state, nowNs }: BannerProps) {
   return (
     <div className="banner gutter" data-state={state}>
       <div className="in">
-        <Peek state={state} size={34} />
+        <PeekBox state={state} size={88} pulse={box.bid_count} />
         <div className="msg">
           <b>{head}</b> <span>{rest}</span>
         </div>
         {(state === 'bidding' || state === 'reveal') && (
-          <div className="count">
-            {clock(left)}
+          <div className="count" role="timer">
+            <Tiles text={clock(left)} />
             <small>{state === 'bidding' ? 'to close' : 'to open'}</small>
           </div>
         )}

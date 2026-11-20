@@ -11,7 +11,7 @@ import { useNear } from '@/providers/near-provider';
 const MAX_ITEMS = 12;
 const SPOT_POLL_MS = 15_000;
 
-export type TapeItem = { id: number; ticker: string; state: BoxState; text: string; tone: 'up' | 'down' | 'live' | 'muted' };
+export type TapeItem = { id: number; ticker: string; state: BoxState; text: string; tone: 'up' | 'down' | 'live' | 'muted'; /** Spot price per 1M coins, for open boxes whose pool answered. */ spot?: number };
 
 function liveText(box: LaunchBox, state: BoxState, nowNs: number): string {
   if (state === 'bidding') return `bidding · ${clock((box.close_at - nowNs) / 1e9)}`;
@@ -26,7 +26,7 @@ function openItem(box: LaunchBox, spot: number | undefined): TapeItem {
   if (!spot || !clearing) return { id: box.id, ticker, state: 'open', text: `${clearing.toFixed(4)} Ⓝ`, tone: 'muted' };
   const move = ((spot - clearing) / clearing) * 100;
   const sign = move >= 0 ? '+' : '';
-  return { id: box.id, ticker, state: 'open', text: `${spot.toFixed(4)} Ⓝ ${sign}${move.toFixed(1)}%`, tone: move >= 0 ? 'up' : 'down' };
+  return { id: box.id, ticker, state: 'open', text: `${spot.toFixed(4)} Ⓝ ${sign}${move.toFixed(1)}%`, tone: move >= 0 ? 'up' : 'down', spot };
 }
 
 /** Spot price per 1M coins for each open box, polled every 15 s. */

@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { Coin } from '@/components/board/Coin';
+import { SealedPrice, Tiles } from '@/components/board/Flap';
 import { explorerAccount } from '@/config';
 import { pct } from '@/lib/fees';
 import { clock, formatNear, nsToDate, pricePerMillion } from '@/lib/format';
@@ -36,7 +38,7 @@ function Headline({ box, state }: { box: LaunchBox; state: BoxState }) {
   if (state === 'open' && box.opening) {
     return (
       <>
-        <div className="n">{pricePerMillion(box.opening.price).toFixed(3)} Ⓝ</div>
+        <div className="n"><Tiles text={pricePerMillion(box.opening.price).toFixed(4)} /></div>
         <div className="d up">per 1M ${box.meta.ticker.toUpperCase()} · the one price</div>
       </>
     );
@@ -51,8 +53,8 @@ function Headline({ box, state }: { box: LaunchBox; state: BoxState }) {
   }
   return (
     <>
-      <div className="n">{formatNear(box.total_in, 1)} Ⓝ</div>
-      <div className="d">in the box · {box.bidder_count} bidders</div>
+      <div className="n"><SealedPrice /></div>
+      <div className="d">price sealed · {formatNear(box.total_in, 1)} Ⓝ in the box · {box.bidder_count} {box.bidder_count === 1 ? 'bidder' : 'bidders'}</div>
     </>
   );
 }
@@ -61,9 +63,9 @@ export function Identity({ box, state, nowNs }: IdentityProps) {
   const ticker = box.meta.ticker.toUpperCase();
   const closes = state === 'bidding' ? `in ${clock((box.close_at - nowNs) / 1e9)}` : nsToDate(box.close_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   return (
-    <section className="card pad">
+    <section className="card pad identcard">
       <div className="ident">
-        <div className="avatar">{box.meta.image ? <img src={box.meta.image} alt="" /> : ticker.slice(0, 2)}</div>
+        <Coin image={box.meta.image} ticker={ticker} size={84} square />
         <div>
           <h1>
             {box.meta.name} <span className="tk">${ticker} / NEAR</span>

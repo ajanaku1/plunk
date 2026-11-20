@@ -5,16 +5,16 @@ import { type TapeItem, useTape } from '@/hooks/useTape';
 
 const MIN_ITEMS = 6;
 
-function Item({ it }: { it: TapeItem }) {
+function Item({ it, copy }: { it: TapeItem; copy?: boolean }) {
   return (
-    <Link href={`/box/${it.id}`} className="tape-item" data-tone={it.tone}>
+    <Link href={`/box/${it.id}`} className="tape-item" data-tone={it.tone} {...(copy ? { tabIndex: -1, 'aria-hidden': true } : null)}>
       <span className="tk">${it.ticker}</span>
       <span className="tx">{it.text}</span>
     </Link>
   );
 }
 
-/** A slow marquee of every recent box. Two copies make the loop seamless; it pauses on hover and stops under reduced motion. */
+/** A slow marquee of every recent box. Two copies make the loop seamless (the second is hidden from keyboard and screen readers); it pauses on hover and stops under reduced motion. */
 export function Tape() {
   const items = useTape();
   if (items.length === 0) {
@@ -26,7 +26,7 @@ export function Tape() {
     <div className="tape" aria-label="Recent boxes">
       <div className="tape-track" style={{ animationDuration: `${half.length * 4}s` }}>
         {half.map((it, i) => <Item key={`a${i}`} it={it} />)}
-        {half.map((it, i) => <Item key={`b${i}`} it={it} />)}
+        {half.map((it, i) => <Item key={`b${i}`} it={it} copy />)}
       </div>
     </div>
   );
