@@ -33,11 +33,12 @@ function hasWebgl(): boolean {
  * coins travel across to form the price. Latecomers get the compact strip with a Watch button that opens the stage again. Only real numbers are shown.
  * `cinema` fills the screen and plays the film from `startT` for screen recording, with no close-out.
  */
-export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit, onStep }: { box: LaunchBox; state: BoxState; nowNs: number; cinema?: boolean; startT?: number; onExit?: () => void; onStep?: () => Promise<void> }) {
+export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit, onStep, mine }: { box: LaunchBox; state: BoxState; nowNs: number; cinema?: boolean; startT?: number; onExit?: () => void; onStep?: () => Promise<void>; mine?: string }) {
   const opener = useOpenBox(box, onStep ?? (async () => {}));
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const priceRef = useRef<HTMLDivElement>(null);
+  const mineRef = useRef<HTMLElement>(null);
   const api = useRef<Scene | null>(null);
   const mode = useRef<Mode>({ kind: 'live' });
   const input = useRef({ state, closeAt: box.close_at, step: openingStep(box) });
@@ -210,8 +211,13 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit, o
     const hr = host.getBoundingClientRect();
     const pr = price.getBoundingClientRect();
     // where the price will sit in the collapsed strip: its right edge stays CLOSED_RIGHT from the stage's right edge
-    const endX = hr.width - 200 - pr.width / 2;
-    const endY = 14 + pr.height / 2;
+    // with a result of your own, the coins land on that line; otherwise on the price tiles
+    const narrow = window.matchMedia('(max-width: 760px)').matches;
+    const gapR = narrow ? 14 : 200;
+    const gapT = narrow ? 12 : 14;
+    const m = mineRef.current?.getBoundingClientRect();
+    const endX = m ? hr.width - gapR - (pr.right - (m.left + m.width / 2)) : hr.width - gapR - pr.width / 2;
+    const endY = m ? gapT + (m.top + m.height / 2 - pr.top) : gapT + pr.height / 2;
     requestAnimationFrame(() => {
       const els = host.querySelectorAll<HTMLElement>('.flyer');
       els.forEach((el, i) => {
@@ -286,7 +292,10 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit, o
         {state === 'open' && (isCollapsed || !showFilm || price.visible) && (
           <>
             <Tiles text={shownPrice} label={`${final} NEAR per 1M`} className={filmPrice ? undefined : 'lk'} />
-            <small>{filmPrice ? 'The price, unlocking' : 'NEAR per 1M. Everyone paid this.'}</small>
+            <small>
+              {filmPrice ? 'The price, unlocking' : 'NEAR per 1M. Everyone paid this.'}
+              {mine && !filmPrice && <b ref={mineRef} className="mine">You got {mine} ${ticker}</b>}
+            </small>
           </>
         )}
       </div>

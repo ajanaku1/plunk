@@ -25,7 +25,7 @@ import { SwapPanel } from '@/components/terminal/SwapPanel';
 import { TradesFeed } from '@/components/terminal/TradesFeed';
 import { messageOf } from '@/lib/errors';
 import { txLink } from '@/lib/txlink';
-import { fmt, formatNear, toNumber } from '@/lib/format';
+import { fmt, formatCoinsM, formatNear, toNumber } from '@/lib/format';
 import { tgas } from '@/lib/gas';
 import { useStorageMin } from '@/hooks/useStorageMin';
 import { type Bid, type BoxState, type LaunchBox, stateOf } from '@/lib/launchpad';
@@ -121,9 +121,12 @@ export function BoxView({ id }: { id: number }) {
 
   const chartNote = state === 'failed' ? 'No pool was created.' : 'Totals only. Prices do not exist until the box clears.';
   const ticker = box.meta.ticker.toUpperCase();
+  // what you received, only for a bidder in an open box (the dev's fill goes to escrow)
+  const got = accountId && accountId !== box.dev ? bids.reduce((a, b) => a + BigInt(b.tokens), 0n) : 0n;
+  const mine = state === 'open' && got > 0n ? `${formatCoinsM(got)}M` : undefined;
   return (
     <>
-      <Stage box={box} state={state} nowNs={nowNs} onStep={refresh} />
+      <Stage box={box} state={state} nowNs={nowNs} onStep={refresh} mine={mine} />
       <div className="page gutter in">
         <main className="main">
           <Identity box={box} state={state} nowNs={nowNs} />
