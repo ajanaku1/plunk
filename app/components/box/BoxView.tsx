@@ -123,7 +123,7 @@ export function BoxView({ id }: { id: number }) {
   const ticker = box.meta.ticker.toUpperCase();
   return (
     <>
-      <Stage box={box} state={state} nowNs={nowNs} />
+      <Stage box={box} state={state} nowNs={nowNs} onStep={refresh} />
       <div className="page gutter in">
         <main className="main">
           <Identity box={box} state={state} nowNs={nowNs} />

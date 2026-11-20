@@ -5,6 +5,7 @@ import { Coin } from '@/components/board/Coin';
 import { Tiles } from '@/components/board/Flap';
 import { COPY, openingStep } from '@/components/box/Banner';
 import { Peek } from '@/components/Peek';
+import { useOpenBox } from '@/hooks/useOpenBox';
 import { STATE_LABEL, priceText } from '@/lib/board';
 import { clock, formatNear, pricePerMillion } from '@/lib/format';
 import { type BoxState, type LaunchBox, revealEnd } from '@/lib/launchpad';
@@ -32,7 +33,8 @@ function hasWebgl(): boolean {
  * coins travel across to form the price. Latecomers get the compact strip with a Watch button that opens the stage again. Only real numbers are shown.
  * `cinema` fills the screen and plays the film from `startT` for screen recording, with no close-out.
  */
-export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }: { box: LaunchBox; state: BoxState; nowNs: number; cinema?: boolean; startT?: number; onExit?: () => void }) {
+export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit, onStep }: { box: LaunchBox; state: BoxState; nowNs: number; cinema?: boolean; startT?: number; onExit?: () => void; onStep?: () => Promise<void> }) {
+  const opener = useOpenBox(box, onStep ?? (async () => {}));
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const priceRef = useRef<HTMLDivElement>(null);
@@ -277,8 +279,8 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }:
         )}
         {state === 'opening' && !showFilm && (
           <>
-            <div className="stepper" aria-label={`step ${step} of 4`}>{[1, 2, 3, 4].map((n) => <i key={n} className={n <= step ? 'done' : undefined} />)}</div>
-            <small>opening, step {step} of 4</small>
+            <div className="stepper" aria-label={working ? `step ${step} of 4` : 'not started'}>{[1, 2, 3, 4].map((n) => <i key={n} className={working && n <= step ? 'done' : undefined} />)}</div>
+            <small>{working ? `opening, step ${step} of 4` : 'reveal over, not opened yet'}</small>
           </>
         )}
         {state === 'open' && (isCollapsed || !showFilm || price.visible) && (
@@ -293,6 +295,12 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit }:
           <p className="cap" aria-live="off">{captionAt(t)}</p>
         ) : (
           <p className="cap"><b>{head}</b> <span>{state === 'opening' ? (working ? `Step ${step} of 4: ${STEP_LABEL[step - 1]}. Each step is a transaction on the chain.` : 'The reveal is over. Anyone can open the box from the Opening panel; it then takes a few transactions.') : rest}</span></p>
+        )}
+        {state === 'opening' && !showFilm && !cinema && onStep && (
+          <p className="stage-open">
+            <button className="cta" type="button" disabled={opener.busy} onClick={() => void opener.nudge()}>{opener.label}</button>
+            {opener.error && <span className="err">{opener.error}</span>}
+          </p>
         )}
         {state === 'opening' && !showFilm && (working ? <p className="nums mono working">working on the chain · {waitText}</p> : <p className="nums mono">waiting for someone to open it</p>)}
         {state !== 'failed' && state !== 'opening' && <p className="nums mono">{box.bid_count} {box.bid_count === 1 ? 'bid' : 'bids'} · {box.bidder_count} {box.bidder_count === 1 ? 'bidder' : 'bidders'} · {formatNear(box.total_in, 1)} Ⓝ in the box</p>}

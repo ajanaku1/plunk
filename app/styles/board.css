@@ -241,6 +241,8 @@ tbody tr:has(.pf-hold) td { padding-block: 14px; }
 .stage-cap > * { max-width: 760px; }
 .stage-cap .cap { margin: 0; font: 500 16px/1.35 var(--font-archivo), sans-serif; color: #c9c2d8; }
 .stage-cap .cap b { font: 900 clamp(22px, 3vw, 34px)/1.05 var(--font-display); letter-spacing: -.03em; color: #f3f0fa; display: block; margin-bottom: 4px; }
+.stage-cap .stage-open { margin: 6px 0 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; pointer-events: auto; }
+.stage-cap .stage-open .cta { width: auto; padding-inline: 22px; }
 .stage-cap .nums { margin: 0; font-size: 12px; color: #a79fba; }
 .stage-ctl { position: absolute; right: 20px; bottom: 16px; display: flex; align-items: center; gap: 10px; transition: bottom .85s cubic-bezier(.65, 0, .25, 1); }
 .stage-ctl button { height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid #332d3d; background: #15111eE6; color: #f3f0fa; font: 700 13px var(--font-archivo), sans-serif; cursor: pointer; }
