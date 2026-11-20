@@ -20,6 +20,8 @@ export type StageOptions = {
   ticker: string;
   /** How many scripted orbs a replay shows (real bidder count, capped). */
   bidders: number;
+  /** The film: the camera comes in closer so the box fills a video frame. */
+  tight?: boolean;
 };
 export type Stage = {
   /** Draw scene time t (seconds on the 22 s timeline). `wall` is the wall clock in seconds for live orbs; `scripted` shows the film's own orbs. */
@@ -344,7 +346,7 @@ export async function createStage(opts: StageOptions): Promise<Stage> {
     eyes.scale.setScalar(t > 11.8 ? 1.25 : 1);
     leakMat.opacity = Math.min(1, S.leak);
     inner.intensity = S.inner * 1.8 * Math.PI;
-    bloom.strength = S.bloom;
+    bloom.strength = S.bloom * (opts.tight ? 0.55 : 1);
     bloom.radius = 0.55;
     bloom.threshold = 1.0;
     seal.visible = t >= SEAL_ON && S.crack < 1;
@@ -360,7 +362,7 @@ export async function createStage(opts: StageOptions): Promise<Stage> {
       m.position.set(0.2 + Math.cos(ang) * 0.25 * k, 0.31 + 0.5 * k - 1.9 * k * k + 0.05, 0.23 + Math.sin(ang) * 0.12 * k + 0.2 * k);
       m.rotation.set(k * 9, k * 7, k * 5);
     });
-    const pk = cam.aspect < 1.5 ? 1 + (1.5 - cam.aspect) * 0.75 : cam.aspect > 2 ? 0.8 : 1;
+    const pk = (cam.aspect < 1.5 ? 1 + (1.5 - cam.aspect) * 0.75 : cam.aspect > 2 ? 0.8 : 1) * (opts.tight ? 0.85 : 1);
     cam.position.set(Math.sin(S.orbit) * S.camD * pk, S.camY * (cam.aspect < 1.5 ? 1.12 : 1), Math.cos(S.orbit) * S.camD * pk);
     cam.lookAt(0, S.camTY, 0);
     orbs.forEach((o) => {

@@ -16,6 +16,7 @@ import { TOTAL, captionAt, priceAt } from '@/lib/timeline';
 type Mode = { kind: 'live' } | { kind: 'flip'; start: number } | { kind: 'film'; start: number; from: number } | { kind: 'scrub'; t: number };
 
 const FLYERS = 14;
+const OUTRO = 3; // seconds of end card after the film, only in the recorded cut
 const STEP_LABEL = ['Clearing bids', 'Minting the coin', 'Creating the pool', 'Adding liquidity'];
 
 function hasWebgl(): boolean {
@@ -48,6 +49,9 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit, o
   const collapsedRef = useRef(false);
   const openingSince = useRef(nowNs);
   const reduceRef = useRef(false);
+  // `?rec=1` hands the clock to a recorder: it seeks the scene frame by frame instead of playing in real time
+  const rec = useRef(cinema && typeof location !== 'undefined' && new URLSearchParams(location.search).has('rec'));
+  const [outro, setOutro] = useState(0);
   const [t, setT] = useState(() => stageTime({ state, nowNs, closeAt: box.close_at }));
   const [gl, setGl] = useState(true);
   const [ready, setReady] = useState(false);
@@ -94,10 +98,24 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit, o
     ro.observe(el);
     void import('@/lib/stage3d')
       .then(async ({ createStage }) => {
-        const s = await createStage({ canvas: el, image: box.meta.image || undefined, ticker: box.meta.ticker, bidders: box.bidder_count });
+        const s = await createStage({ canvas: el, image: box.meta.image || undefined, ticker: box.meta.ticker, bidders: box.bidder_count, tight: cinema });
         if (off) return s.dispose();
         api.current = s;
         s.resize();
+        if (rec.current) {
+          (window as unknown as { __film?: unknown }).__film = {
+            total: TOTAL + OUTRO,
+            seek: (x: number) => {
+              const k = Math.min(x, TOTAL - 0.01);
+              mode.current = { kind: 'scrub', t: k };
+              s.render(k, x, true);
+              setT(k);
+              setOutro(Math.max(0, Math.min(1, (x - TOTAL) / 0.8)));
+              setReady(true);
+            },
+          };
+          return;
+        }
         if (cinema && input.current.state === 'open' && !reduce) mode.current = { kind: 'film', start: performance.now() / 1000, from: startT };
         const frame = (now: number) => {
           if (off) return;
@@ -270,12 +288,11 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit, o
     <section ref={wrap} className={`stage${cinema ? ' cinema' : ''}${isCollapsed ? ' collapsed' : ''}`} data-state={state} aria-label={`${box.meta.name} box, ${STATE_LABEL[state]}`}>
       <canvas ref={canvas} className="stage-gl" style={{ opacity: ready && !isCollapsed ? 1 : 0 }} aria-hidden="true" />
       {(!gl || (!ready && !isCollapsed)) && <div className="stage-flat" aria-hidden="true"><Peek state={state} size={140} /></div>}
-      {!cinema && (
-        <div className="stage-who">
-          <Coin image={box.meta.image || undefined} ticker={ticker} size={44} square />
-          <div><b>{box.meta.name} <small>${ticker}</small></b><span className="chip status" data-state={state}>{STATE_LABEL[state]}</span></div>
-        </div>
-      )}
+      <div className="stage-who">
+        <Coin image={box.meta.image || undefined} ticker={ticker} size={44} square />
+        <div><b>{box.meta.name} <small>${ticker}</small></b>{!cinema && <span className="chip status" data-state={state}>{STATE_LABEL[state]}</span>}</div>
+      </div>
+      {cinema && <p className="film-count nums mono">{Math.round(box.bidder_count * Math.min(1, t / 6.4))} bidders in</p>}
       <div ref={priceRef} className="stage-clock" data-hit={hit}>
         {(state === 'bidding' || state === 'reveal') && !showFilm && (
           <>
@@ -344,7 +361,14 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit, o
       {Array.from({ length: flyers }, (_, i) => (
         <span key={i} className="flyer" aria-hidden="true"><Coin image={box.meta.image || undefined} ticker={ticker} size={30} /></span>
       ))}
-      {cinema && <p className="stage-hint">Esc to leave</p>}
+      {cinema && !rec.current && <p className="stage-hint">Esc to leave</p>}
+      {cinema && outro > 0 && (
+        <div className="film-end" style={{ opacity: outro }} aria-hidden="true">
+          <Peek tile size={84} />
+          <b>plunk</b>
+          <span>Fair meme launches on NEAR</span>
+        </div>
+      )}
     </section>
   );
 }
