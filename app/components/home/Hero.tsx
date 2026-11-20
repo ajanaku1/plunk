@@ -5,9 +5,8 @@ import { Coin } from '@/components/board/Coin';
 import { SealedPrice, Tiles } from '@/components/board/Flap';
 import { PeekBox } from '@/components/board/PeekBox';
 import { openingStep } from '@/components/box/Banner';
-import { STATE_LABEL } from '@/components/home/BoxCard';
 import { Peek } from '@/components/Peek';
-import { meterSegments, priceText } from '@/lib/board';
+import { meterSegments, priceText, STATE_LABEL } from '@/lib/board';
 import { clock, formatNear, pricePerMillion, toNumber } from '@/lib/format';
 import { type BoxState, type LaunchBox, revealEnd, stateOf } from '@/lib/launchpad';
 

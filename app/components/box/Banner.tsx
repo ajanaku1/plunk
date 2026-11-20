@@ -1,9 +1,10 @@
+import type { ReactNode } from 'react';
 import { Tiles } from '@/components/board/Flap';
 import { PeekBox } from '@/components/board/PeekBox';
 import { clock } from '@/lib/format';
 import { type BoxState, type LaunchBox, revealEnd } from '@/lib/launchpad';
 
-type BannerProps = { box: LaunchBox; state: BoxState; nowNs: number };
+type BannerProps = { box: LaunchBox; state: BoxState; nowNs: number; extra?: ReactNode };
 
 const COPY: Record<BoxState, [string, string]> = {
   bidding: ['Bidding is open.', 'Everyone who gets in pays the same clearing price. No price is visible to anyone until the box shuts.'],
@@ -22,7 +23,7 @@ export function openingStep(box: LaunchBox): number {
   return 1;
 }
 
-export function Banner({ box, state, nowNs }: BannerProps) {
+export function Banner({ box, state, nowNs, extra }: BannerProps) {
   const [head, rest] = COPY[state];
   const target = state === 'bidding' ? box.close_at : revealEnd(box);
   const left = Math.ceil((target - nowNs) / 1e9);
@@ -40,6 +41,7 @@ export function Banner({ box, state, nowNs }: BannerProps) {
             <small>{state === 'bidding' ? 'to close' : 'to open'}</small>
           </div>
         )}
+        {extra}
         {state === 'opening' && box.phase === 'Opening' && (
           <div className="stepper" aria-label={`step ${step} of 4`}>
             {[1, 2, 3, 4].map((n) => (

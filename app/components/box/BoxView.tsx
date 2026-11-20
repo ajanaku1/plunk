@@ -8,6 +8,7 @@ import { BidPanel } from '@/components/box/BidPanel';
 import { ClaimsPanel, claimable } from '@/components/box/ClaimsPanel';
 import { DevPanel } from '@/components/box/DevPanel';
 import { Identity } from '@/components/box/Identity';
+import { OpeningBurst } from '@/components/box/OpeningBurst';
 import { TaxCard } from '@/components/box/TaxCard';
 import { OpeningPanel } from '@/components/box/OpeningPanel';
 import { RevealPanel } from '@/components/box/RevealPanel';
@@ -117,7 +118,7 @@ export function BoxView({ id }: { id: number }) {
   const ticker = box.meta.ticker.toUpperCase();
   return (
     <>
-      <Banner box={box} state={state} nowNs={nowNs} />
+      <Banner box={box} state={state} nowNs={nowNs} extra={<OpeningBurst box={box} state={state} />} />
       <div className="page gutter in">
         <main className="main">
           <Identity box={box} state={state} nowNs={nowNs} />

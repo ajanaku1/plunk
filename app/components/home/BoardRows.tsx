@@ -4,8 +4,7 @@ import Link from 'next/link';
 import { Coin } from '@/components/board/Coin';
 import { SealedPrice, Tiles } from '@/components/board/Flap';
 import { openingStep } from '@/components/box/Banner';
-import { STATE_LABEL } from '@/components/home/BoxCard';
-import { ageLabel, changeVsClose, priceText } from '@/lib/board';
+import { ageLabel, changeVsClose, priceText, STATE_LABEL } from '@/lib/board';
 import { clock, pricePerMillion } from '@/lib/format';
 import { type BoxState, type LaunchBox, revealEnd, stateOf } from '@/lib/launchpad';
 

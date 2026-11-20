@@ -243,9 +243,6 @@ tr:last-child td { border-bottom: 0; }
 
 /* home grid */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-.boxcard { display: block; transition: border-color var(--fast), transform var(--fast) var(--ease); }
-.boxcard:hover { border-color: var(--line-2); transform: translateY(-1px); }
-.boxcard[data-state="failed"] { opacity: .7; }
 
 /* network chip, wallet menu, mobile nav, footer */
 .net { font: 600 10px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--warn); border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent); border-radius: 6px; padding: 3px 7px; }
@@ -310,19 +307,3 @@ tr:last-child td { border-bottom: 0; }
 .eyebrow { display: inline-flex; align-items: center; gap: 8px; font: 600 11px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .eyebrow i { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 20%, transparent); }
 
-/* box cards */
-.boxcard { display: grid; gap: 12px; padding: 14px; }
-.bc-top { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 12px; align-items: center; }
-.bc-top .avatar { width: 48px; height: 48px; border-radius: 12px; font-size: 15px; }
-.bc-name { min-width: 0; }
-.bc-name h3 { margin: 0; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bc-name span { font-size: 12px; color: var(--muted); }
-.bc-stats { display: grid; grid-template-columns: 1.4fr 1fr .7fr; gap: 10px; }
-.bc-stats small { display: block; font: 10px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
-.bc-stats b { font: 500 14px var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.bc-stats b small { display: inline; margin-left: 4px; }
-.bc-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; color: var(--faint); }
-.bc-foot .mono { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-.bc-cta { flex: none; color: var(--fg); font: 600 12px var(--font-body); padding: 5px 10px; border-radius: 8px; background: var(--surface-2); transition: background var(--fast), color var(--fast); }
-.boxcard:hover .bc-cta { background: var(--accent); color: var(--accent-fg); }
-.boxcard[data-state="bidding"] .bc-cta { background: color-mix(in srgb, var(--purple) 18%, var(--surface-2)); }
