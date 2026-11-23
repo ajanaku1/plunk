@@ -65,10 +65,16 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit, o
     setCollapsedState(v);
   };
   collapsedRef.current = collapsed;
+  // the 3D chunk is fetched only once the stage will actually draw: not for the compact strip, until Watch is pressed
+  const [armed, setArmed] = useState(!(collapsed && state === 'open'));
+  useEffect(() => {
+    if (!(collapsed && state === 'open')) setArmed(true);
+  }, [collapsed, state]);
   const ticker = box.meta.ticker.toUpperCase();
   const final = priceText(pricePerMillion(box.opening?.price ?? '0'));
 
   useEffect(() => {
+    if (!armed) return;
     const el = canvas.current;
     const host = wrap.current;
     if (!el || !host) return;
@@ -116,6 +122,8 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit, o
           };
           return;
         }
+        // Watch may have been pressed while the chunk was loading: start its film from now, not from the click
+        if (mode.current.kind === 'film') mode.current = { ...mode.current, start: performance.now() / 1000 };
         if (cinema && input.current.state === 'open' && !reduce) mode.current = { kind: 'film', start: performance.now() / 1000, from: startT };
         const frame = (now: number) => {
           if (off) return;
@@ -182,9 +190,9 @@ export function Stage({ box, state, nowNs, cinema = false, startT = 0, onExit, o
       api.current?.dispose();
       api.current = null;
     };
-    // the scene is built once per stage; live values come in through refs
+    // the scene is built once per stage, when it is first needed; live values come in through refs
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [armed]);
 
   useEffect(() => {
     if (state === 'opening') openingSince.current = Date.now() * 1e6;

@@ -234,7 +234,7 @@ export async function createStage(opts: StageOptions): Promise<Stage> {
 
   // live orbs: one per real bid, fired by the page
   const liveOrbs = Array.from({ length: 14 }, () => {
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: bidTex.near, transparent: true, depthWrite: false }));
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: bidTex.plain, transparent: true, depthWrite: false }));
     sp.visible = false;
     scene.add(sp);
     return { sp, from: new THREE.Vector3(), born: -1 };
@@ -245,7 +245,6 @@ export async function createStage(opts: StageOptions): Promise<Stage> {
     const a = Math.random() * Math.PI * 2;
     o.from.set(Math.cos(a) * 2.2, 0.6 + Math.random() * 1.0, Math.sin(a) * 1.6 + 0.5);
     o.born = wall;
-    o.sp.material.map = bidTex[BID_KINDS[Math.floor(Math.random() * 3)]!];
   };
 
   // coins: real discs with the token's art, real physics
