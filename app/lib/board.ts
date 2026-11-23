@@ -1,3 +1,8 @@
+import type { BoxState } from '@/lib/launchpad';
+
+/** The state's name as shown on chips. */
+export const STATE_LABEL: Record<BoxState, string> = { bidding: 'Bidding', reveal: 'Reveal', opening: 'Opening', open: 'Open', failed: 'Failed' };
+
 /** Small pure helpers for the Board look (flip tiles, raise meter, coin stacks). Kept free of React so they can be tested. */
 
 /** Short age for a flip tile: "5M", "3H", "2D". `fromNs` and `nowNs` are block-time nanoseconds. */

@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@hot-labs/near-connect": "0.11.4",
+    "cannon-es": "0.20.0",
     "lightweight-charts": "5.2.1",
     "near-api-js": "7.4.0",
     "next": "16.4.5",
