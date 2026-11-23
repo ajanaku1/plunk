@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { ImageResponse } from 'next/og';
 import { launchpadId, networkId, rpcUrls } from '@/config';
-import { artUri } from '@/lib/artdata';
+import { artUri, gatewayHost } from '@/lib/artdata';
 import { tickerHue } from '@/lib/board';
 import { type LaunchBox, stateOf } from '@/lib/launchpad';
 import { makeRpc } from '@/lib/rpc';
@@ -54,7 +54,7 @@ export default async function BoxCardImage({ params }: { params: Promise<{ id: s
   const state = stateOf(box, Date.now() * 1e6);
   const copy = cardCopy(box, state);
   const ticker = box.meta.ticker.toUpperCase();
-  const art = box.meta.image ? await artUri(box.meta.image) : null;
+  const art = box.meta.image ? await artUri(box.meta.image, gatewayHost(process.env.PINATA_GATEWAY)) : null;
   const tone = TONE[copy.tone];
   const fonts = [
     { name: 'Archivo', data: await font('archivo-800.woff'), weight: 800 as const, style: 'normal' as const },
