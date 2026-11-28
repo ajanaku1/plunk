@@ -93,7 +93,7 @@ export default async function BoxCardImage({ params }: { params: Promise<{ id: s
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 26, color: '#A79FBA' }}>
           <span>{copy.sub}</span>
-          <span style={{ color: '#9B6BFF' }}>Everyone pays one price</span>
+          {copy.tone !== 'open' && <span style={{ color: '#9B6BFF' }}>Everyone pays one price</span>}
         </div>
       </div>
     ),

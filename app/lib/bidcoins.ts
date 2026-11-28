@@ -3,12 +3,19 @@ import * as THREE from 'three';
 /** The currencies a bid can arrive in. Each bid is drawn as a coin with that currency's mark. */
 export type BidKind = 'near' | 'sol' | 'usdc';
 export const BID_KINDS: BidKind[] = ['near', 'sol', 'usdc'];
+/** A coin with no currency mark: what a live bid shows, because the page does not know the currency a bid came in. */
+export type CoinKind = BidKind | 'plain';
 
 const S = 128;
 
-function mark(x: CanvasRenderingContext2D, kind: BidKind) {
+function mark(x: CanvasRenderingContext2D, kind: CoinKind) {
   const c = S / 2;
-  if (kind === 'near') {
+  if (kind === 'plain') {
+    x.fillStyle = '#9B6BFF';
+    x.beginPath();
+    x.arc(c, c, 58, 0, Math.PI * 2);
+    x.fill();
+  } else if (kind === 'near') {
     // a white coin with the black N
     x.fillStyle = '#f2f2f2';
     x.beginPath();
@@ -87,10 +94,10 @@ function mark(x: CanvasRenderingContext2D, kind: BidKind) {
   x.fill();
 }
 
-/** One round, transparent texture per currency. */
-export function bidCoinTextures(): Record<BidKind, THREE.Texture> {
-  const out = {} as Record<BidKind, THREE.Texture>;
-  for (const k of BID_KINDS) {
+/** One round, transparent texture per currency, plus the unmarked coin. */
+export function bidCoinTextures(): Record<CoinKind, THREE.Texture> {
+  const out = {} as Record<CoinKind, THREE.Texture>;
+  for (const k of [...BID_KINDS, 'plain'] as CoinKind[]) {
     const c = document.createElement('canvas');
     c.width = c.height = S;
     mark(c.getContext('2d')!, k);
